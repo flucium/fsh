@@ -6,6 +6,8 @@ firedbg/
 
 # Files
 Cargo.lock
+*.tar
+*.tar.*
 **/*.rs.bk
 *.pdb
 .*
