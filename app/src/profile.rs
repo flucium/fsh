@@ -11,7 +11,7 @@ pub const DEFAULT_PROFILE_PATH: &str = "~/.profile.fsh";
 
 /// The default path to the profile.
 #[cfg(debug_assertions)]
-pub const DEFAULT_PROFILE_PATH: &str = "../temp/profile.fsh";
+pub const DEFAULT_PROFILE_PATH: &str = "./temp/profile.fsh";
 
 #[cfg(not(debug_assertions))]
 pub const DEFAULT_PROFILE_CONTENT: &str = "FSH_PROMPT=\"# \"\nFSH_HISTORY = true\nFSH_HISTORY_SIZE = 1000\nFSH_HISTORY_FILE = \"~/.fsh_history\"";
