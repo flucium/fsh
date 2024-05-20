@@ -2,6 +2,7 @@ use fsh_common::{Error, ErrorKind, Result};
 use std::{
     fs::File,
     io::{self, Read, Write},
+    os::unix::fs::MetadataExt,
     path::Path,
 };
 
@@ -22,11 +23,11 @@ pub const DEFAULT_PROFILE_CONTENT: &str = "FSH_PROMPT=\"# \"\nFSH_HISTORY = true
 pub const DEFAULT_PROFILE_CONTENT: &str = "FSH_PROMPT=\"# \"\nFSH_HISTORY = true\nFSH_HISTORY_SIZE = 1000\nFSH_HISTORY_FILE = \"../temp/fsh_history\"";
 
 /// Create a new profile.
-/// 
+///
 /// or open it if it already exists.
-/// 
+///
 /// Permissions: Read, Write, Create.
-/// 
+///
 /// # Errors
 /// - `ErrorKind::PermissionDenied`: Permission denied.
 /// - `ErrorKind::Other`: Other error.
@@ -48,9 +49,9 @@ pub fn create<P: AsRef<Path>>(path: P) -> Result<File> {
 }
 
 /// Open a profile.
-/// 
+///
 /// Permissions: Read, Write.
-/// 
+///
 /// # Errors
 /// - `ErrorKind::NotFound`: Profile not found.
 /// - `ErrorKind::PermissionDenied`: Permission denied.
@@ -75,7 +76,7 @@ pub fn open<P: AsRef<Path>>(path: P) -> Result<File> {
 }
 
 /// Write to a profile.
-/// 
+///
 /// # Errors
 /// - `ErrorKind::PermissionDenied`: Permission denied.
 /// - `ErrorKind::Interrupted`: Interrupted.
@@ -99,7 +100,7 @@ pub fn write(file: &mut File, contents: &str) -> Result<()> {
 }
 
 /// Read from a profile.
-/// 
+///
 /// # Errors
 /// - `ErrorKind::PermissionDenied`: Permission denied.
 /// - `ErrorKind::Interrupted`: Interrupted.
@@ -126,6 +127,40 @@ pub fn read(file: &mut File) -> Result<String> {
 /// Check if a profile exists.
 pub fn exists<P: AsRef<Path>>(path: P) -> bool {
     path.as_ref().exists()
+}
+
+/// Get the mode of a profile.
+fn mode<P: AsRef<Path>>(path: P) -> Result<u32> {
+    if !exists(&path) {
+        Err(Error::new(ErrorKind::NotFound, "profile not found"))?;
+    }
+
+    let metadata = path
+        .as_ref()
+        .metadata()
+        .map_err(|_| Error::new(ErrorKind::Other, "other error"))?;
+
+    Ok(metadata.mode())
+}
+
+/// Check if a profile is readable.
+pub fn is_readable<P: AsRef<Path>>(path: P) -> bool {
+    let mode = mode(path).unwrap_or(0);
+    mode & 0o400 != 0
+}
+
+/// Check if a profile is writable.
+pub fn is_writable<P: AsRef<Path>>(path: P) -> bool {
+    let mode = mode(path).unwrap_or(0);
+    mode & 0o200 != 0
+}
+
+/// Get profile path parent directory
+pub fn parent<P: AsRef<Path>>(path: P) -> Result<String> {
+    path.as_ref()
+        .parent()
+        .map(|p| p.to_str().unwrap().to_string())
+        .ok_or(Error::new(ErrorKind::Other, "other error"))
 }
 
 #[cfg(test)]
@@ -251,6 +286,95 @@ mod tests {
 
         // Check if the file exists.
         assert!(exists(path));
+
+        // Remove the file.
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_mode() {
+        let path = "../temp/test_mode";
+
+        // Remove the file if it exists.
+        let _ = fs::remove_file(path);
+
+        // Check if the file exists.
+        assert!(!exists(path));
+
+        // Create a new file.
+        let _ = fs::write(path, "test");
+
+        // Check if the file exists.
+        assert!(exists(path));
+
+        // Check the mode of the file.
+        let mode = mode(path);
+
+        // Check if the mode was retrieved successfully.
+        assert!(mode.is_ok());
+
+        // Remove the file.
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_is_readable() {
+        let path = "../temp/test_is_readable";
+
+        // Remove the file if it exists.
+        let _ = fs::remove_file(path);
+
+        // Check if the file is readable.
+        assert!(!is_readable(path));
+
+        // Create a new file.
+        let _ = fs::write(path, "test");
+
+        // Check if the file is readable.
+        assert!(is_readable(path));
+
+        // Remove the file.
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_is_writable() {
+        let path = "../temp/test_is_writable";
+
+        // Remove the file if it exists.
+        let _ = fs::remove_file(path);
+
+        // Check if the file is writable.
+        assert!(!is_writable(path));
+
+        // Create a new file.
+        let _ = fs::write(path, "test");
+
+        // Check if the file is writable.
+        assert!(is_writable(path));
+
+        // Remove the file.
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn test_parent() {
+        let path = "../temp/test_parent";
+
+        // Remove the file if it exists.
+        let _ = fs::remove_file(path);
+
+        // Check if the parent directory exists.
+        assert!(parent(path).is_ok());
+
+        // Create a new file.
+        let _ = fs::write(path, "test");
+
+        // Check if the parent directory exists.
+        assert!(parent(path).is_ok());
+
+        // Check parent directory path.
+        assert_eq!(parent(path).unwrap(), "../temp");
 
         // Remove the file.
         let _ = fs::remove_file(path);
