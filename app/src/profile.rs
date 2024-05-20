@@ -5,18 +5,31 @@ use std::{
     path::Path,
 };
 
+/// Default profile path.
 #[cfg(not(debug_assertions))]
 pub const DEFAULT_PROFILE_PATH: &str = "~/.profile.fsh";
 
+/// Default profile content.
 #[cfg(debug_assertions)]
 pub const DEFAULT_PROFILE_PATH: &str = "./temp/profile.fsh";
 
+/// Default profile content.
 #[cfg(not(debug_assertions))]
 pub const DEFAULT_PROFILE_CONTENT: &str = "FSH_PROMPT=\"# \"\nFSH_HISTORY = true\nFSH_HISTORY_SIZE = 1000\nFSH_HISTORY_FILE = \"~/.fsh_history\"";
 
+/// Default profile content.
 #[cfg(debug_assertions)]
 pub const DEFAULT_PROFILE_CONTENT: &str = "FSH_PROMPT=\"# \"\nFSH_HISTORY = true\nFSH_HISTORY_SIZE = 1000\nFSH_HISTORY_FILE = \"../temp/fsh_history\"";
 
+/// Create a new profile.
+/// 
+/// or open it if it already exists.
+/// 
+/// Permissions: Read, Write, Create.
+/// 
+/// # Errors
+/// - `ErrorKind::PermissionDenied`: Permission denied.
+/// - `ErrorKind::Other`: Other error.
 pub fn create<P: AsRef<Path>>(path: P) -> Result<File> {
     File::options()
         .create(true)
@@ -34,6 +47,14 @@ pub fn create<P: AsRef<Path>>(path: P) -> Result<File> {
         })
 }
 
+/// Open a profile.
+/// 
+/// Permissions: Read, Write.
+/// 
+/// # Errors
+/// - `ErrorKind::NotFound`: Profile not found.
+/// - `ErrorKind::PermissionDenied`: Permission denied.
+/// - `ErrorKind::Other`: Other error.
 pub fn open<P: AsRef<Path>>(path: P) -> Result<File> {
     File::options()
         .write(true)
@@ -53,6 +74,12 @@ pub fn open<P: AsRef<Path>>(path: P) -> Result<File> {
         })
 }
 
+/// Write to a profile.
+/// 
+/// # Errors
+/// - `ErrorKind::PermissionDenied`: Permission denied.
+/// - `ErrorKind::Interrupted`: Interrupted.
+/// - `ErrorKind::Other`: Other error.
 pub fn write(file: &mut File, contents: &str) -> Result<()> {
     file.write_all(contents.as_bytes())
         .map_err(|err| match err.kind() {
@@ -71,6 +98,12 @@ pub fn write(file: &mut File, contents: &str) -> Result<()> {
     Ok(())
 }
 
+/// Read from a profile.
+/// 
+/// # Errors
+/// - `ErrorKind::PermissionDenied`: Permission denied.
+/// - `ErrorKind::Interrupted`: Interrupted.
+/// - `ErrorKind::Other`: Other error.
 pub fn read(file: &mut File) -> Result<String> {
     let mut contents = String::new();
     file.read_to_string(&mut contents)
@@ -90,6 +123,7 @@ pub fn read(file: &mut File) -> Result<String> {
     Ok(contents)
 }
 
+/// Check if a profile exists.
 pub fn exists<P: AsRef<Path>>(path: P) -> bool {
     path.as_ref().exists()
 }
