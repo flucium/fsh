@@ -3,40 +3,40 @@ use crate::preprocess::preprocess;
 use super::token::Token;
 
 const RESERVED_SYMBOLS: [char; 11] = [
-    SYMBOL_SEMICOLON,
-    SYMBOL_EQUAL,
-    SYMBOL_BACKSLASH,
-    SYMBOL_SINGLE_QUOTE,
-    SYMBOL_DOUBLE_QUOTE,
-    SYMBOL_AMPERSAND,
-    SYMBOL_DOLLAR,
-    SYMBOL_AT,
-    SYMBOL_PIPE,
-    SYMBOL_GT,
-    SYMBOL_LT,
+    RESERVED_SYMBOL_SEMICOLON,
+    RESERVED_SYMBOL_EQUAL,
+    RESERVED_SYMBOL_BACKSLASH,
+    RESERVED_SYMBOL_SINGLE_QUOTE,
+    RESERVED_SYMBOL_DOUBLE_QUOTE,
+    RESERVED_SYMBOL_AMPERSAND,
+    RESERVED_SYMBOL_DOLLAR,
+    RESERVED_SYMBOL_AT,
+    RESERVED_SYMBOL_PIPE,
+    RESERVED_SYMBOL_GT,
+    RESERVED_SYMBOL_LT,
 ];
 
-const SYMBOL_SEMICOLON: char = ';';
+const RESERVED_SYMBOL_SEMICOLON: char = ';';
 
-const SYMBOL_EQUAL: char = '=';
+const RESERVED_SYMBOL_EQUAL: char = '=';
 
-const SYMBOL_BACKSLASH: char = '\\';
+const RESERVED_SYMBOL_BACKSLASH: char = '\\';
 
-const SYMBOL_SINGLE_QUOTE: char = '\'';
+const RESERVED_SYMBOL_SINGLE_QUOTE: char = '\'';
 
-const SYMBOL_DOUBLE_QUOTE: char = '"';
+const RESERVED_SYMBOL_DOUBLE_QUOTE: char = '"';
 
-const SYMBOL_AMPERSAND: char = '&';
+const RESERVED_SYMBOL_AMPERSAND: char = '&';
 
-const SYMBOL_DOLLAR: char = '$';
+const RESERVED_SYMBOL_DOLLAR: char = '$';
 
-const SYMBOL_AT: char = '@';
+const RESERVED_SYMBOL_AT: char = '@';
 
-const SYMBOL_PIPE: char = '|';
+const RESERVED_SYMBOL_PIPE: char = '|';
 
-const SYMBOL_GT: char = '>';
+const RESERVED_SYMBOL_GT: char = '>';
 
-const SYMBOL_LT: char = '<';
+const RESERVED_SYMBOL_LT: char = '<';
 
 #[derive(Debug)]
 pub struct Lexer {
@@ -112,8 +112,8 @@ impl Lexer {
 
         let (is_double_quote, is_single_quote) = match self.current_char() {
             None => return Ok(None),
-            Some(&SYMBOL_DOUBLE_QUOTE) => (true, false),
-            Some(&SYMBOL_SINGLE_QUOTE) => (false, true),
+            Some(&RESERVED_SYMBOL_DOUBLE_QUOTE) => (true, false),
+            Some(&RESERVED_SYMBOL_SINGLE_QUOTE) => (false, true),
             Some(_) => (false, false),
         };
 
@@ -123,19 +123,19 @@ impl Lexer {
 
         let (string, end_char) = self.read_while(|c| {
             if is_double_quote {
-                c != SYMBOL_DOUBLE_QUOTE
+                c != RESERVED_SYMBOL_DOUBLE_QUOTE
             } else if is_single_quote {
-                c != SYMBOL_SINGLE_QUOTE
+                c != RESERVED_SYMBOL_SINGLE_QUOTE
             } else {
                 !RESERVED_SYMBOLS.contains(&c) && !c.is_whitespace()
             }
         });
 
-        if is_double_quote && end_char != Some(&SYMBOL_DOUBLE_QUOTE) {
+        if is_double_quote && end_char != Some(&RESERVED_SYMBOL_DOUBLE_QUOTE) {
             self.position = start_position;
 
             Err("double quote error".to_string())?
-        } else if is_single_quote && end_char != Some(&SYMBOL_SINGLE_QUOTE) {
+        } else if is_single_quote && end_char != Some(&RESERVED_SYMBOL_SINGLE_QUOTE) {
             self.position = start_position;
 
             Err("single quote error".to_string())?
@@ -186,7 +186,7 @@ impl Lexer {
 
         let start_position = self.position;
 
-        if current_char == Some(&SYMBOL_DOLLAR) {
+        if current_char == Some(&RESERVED_SYMBOL_DOLLAR) {
             self.advance();
         } else {
             self.position = start_position;
@@ -233,7 +233,7 @@ impl Lexer {
 
         let start_position = self.position;
 
-        if current_char == Some(&SYMBOL_AT) {
+        if current_char == Some(&RESERVED_SYMBOL_AT) {
             self.advance();
         } else {
             self.position = start_position;
@@ -262,50 +262,50 @@ impl Lexer {
             }
 
             match ch {
-                &SYMBOL_SEMICOLON => {
+                &RESERVED_SYMBOL_SEMICOLON => {
                     token = Token::Semicolon;
                     self.advance();
                     break;
                 }
 
-                &SYMBOL_EQUAL => {
+                &RESERVED_SYMBOL_EQUAL => {
                     token = Token::Assign;
                     self.advance();
                     break;
                 }
 
-                &SYMBOL_AMPERSAND => {
+                &RESERVED_SYMBOL_AMPERSAND => {
                     token = Token::Ampersand;
                     self.advance();
                     break;
                 }
 
-                &SYMBOL_PIPE => {
+                &RESERVED_SYMBOL_PIPE => {
                     token = Token::Pipe;
                     self.advance();
                     break;
                 }
 
-                &SYMBOL_GT => {
+                &RESERVED_SYMBOL_GT => {
                     token = Token::Gt;
                     self.advance();
                     break;
                 }
 
-                &SYMBOL_LT => {
+                &RESERVED_SYMBOL_LT => {
                     token = Token::Lt;
                     self.advance();
                     break;
                 }
 
-                &SYMBOL_AT => {
+                &RESERVED_SYMBOL_AT => {
                     match self.read_fd() {
                         Ok(Some(fd)) => token = Token::FD(fd as i32),
                         Ok(None) => token = Token::EOF,
                         Err(err) => match self.peek_char() {
                             Some(ch) => {
                                 if ch.is_whitespace() {
-                                    token = Token::String(SYMBOL_AT.to_string());
+                                    token = Token::String(RESERVED_SYMBOL_AT.to_string());
                                     self.advance();
                                 } else {
                                     Err(fsh_common::Error::new(
@@ -315,7 +315,7 @@ impl Lexer {
                                 }
                             }
                             None => {
-                                token = Token::String(SYMBOL_AT.to_string());
+                                token = Token::String(RESERVED_SYMBOL_AT.to_string());
                                 self.advance();
                             }
                         },
@@ -324,14 +324,14 @@ impl Lexer {
                     break;
                 }
 
-                &SYMBOL_DOLLAR => {
+                &RESERVED_SYMBOL_DOLLAR => {
                     match self.read_ident() {
                         Ok(Some(ident)) => token = Token::Ident(ident),
                         Ok(None) => token = Token::EOF,
                         Err(err) => match self.peek_char() {
                             Some(ch) => {
                                 if ch.is_whitespace() {
-                                    token = Token::String(SYMBOL_DOLLAR.to_string());
+                                    token = Token::String(RESERVED_SYMBOL_DOLLAR.to_string());
                                     self.advance();
                                 } else {
                                     Err(fsh_common::Error::new(
@@ -341,7 +341,7 @@ impl Lexer {
                                 }
                             }
                             None => {
-                                token = Token::String(SYMBOL_DOLLAR.to_string());
+                                token = Token::String(RESERVED_SYMBOL_DOLLAR.to_string());
                                 self.advance();
                             }
                         },
@@ -350,7 +350,7 @@ impl Lexer {
                     break;
                 }
 
-                &SYMBOL_DOUBLE_QUOTE | &SYMBOL_SINGLE_QUOTE => {
+                &RESERVED_SYMBOL_DOUBLE_QUOTE | &RESERVED_SYMBOL_SINGLE_QUOTE => {
                     match self.read_string() {
                         Ok(Some(string)) => token = Token::String(string),
                         Ok(None) => token = Token::EOF,
