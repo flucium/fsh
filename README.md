@@ -7,38 +7,57 @@
 
 *The overall specification was decided, and the repository name was changed to FSH (fsh), which is also the name of the program.*
 
-*Repository name FlatShell will be archived soon.*
-
-*To be archived: https://github.com/flucium/flatshell*
+*Archived: https://github.com/flucium/flatshell*
 
 ## Build
-...
 
 <details>
 <summary>Linux</summary>
-...
+
+```bash
+# tools
+apt update -y &&\
+apt install -y git build-essential &&\
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && \
+source "$HOME/.cargo/env" && \
+rustup toolchain add 1.77.2 && \
+rustup default 1.77.2 && \
+```
+
+```bash
+# Debug build
+git clone git@github.com:flucium/fsh.git
+zsh ./fsh/build.sh debug
+```
+
+```bash
+# Release build
+git clone git@github.com:flucium/fsh.git
+zsh ./fsh/build.sh release
+```
+
 </details>
 
-<br>
+<!-- <br> -->
 
-<details>
+<!-- <details>
 <summary>macOS</summary>
 ...
 </details>
 
-<br>
+<br> -->
 
-<details>
+<!-- <details>
 <summary>Windows</summary>
 ...
 </details>
 
-<br>
+<br> -->
 
-<details>
+<!-- <details>
 <summary>Cross compile</summary>
 ...
-</details>
+</details> -->
 
 ## Installation
 ...
@@ -46,15 +65,19 @@
 ## How to use
 ...
 
-## Links
-...
-
-## Prototype
+<!-- ## Prototype
 Repository<br>
 [https://github.com/flucium/flatshell](https://github.com/flucium/flatshell)
 
 Development Essay (rough sketch)<br>
-[https://github.com/flucium/flatshell/blob/main/fsh_development/fsh.pdf](https://github.com/flucium/flatshell/blob/main/fsh_development/fsh.pdf)
+[https://github.com/flucium/flatshell/blob/main/fsh_development/fsh.pdf](https://github.com/flucium/flatshell/blob/main/fsh_development/fsh.pdf) -->
+
+## License
+FSH is licensed under the MIT License. For third-party libralies and other dependencies, please refer to LICENSE_THIRDPARTY.md.
+
+[FSH License](./LICENSE)
+
+[THIRDPARTY License](./LICENSE_THIRDPARTY)
 
 ## Sponsors
 ...
