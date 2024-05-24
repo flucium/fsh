@@ -2,7 +2,7 @@
 name = "fsh"
 version = "0.0.1"
 edition = "2021"
-
+authors = ["flucium"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
