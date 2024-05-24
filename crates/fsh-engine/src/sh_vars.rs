@@ -1,12 +1,11 @@
 use fsh_common::{Error, ErrorKind, Result};
 use std::{collections::HashMap, fs, io::Write, path::Path};
 
-
 pub const RESERVEDWORD_SHELL_VARIABLE_FSH_PROMPT: &str = "FSH_PROMPT";
 
 pub const RESERVEDWORD_SHELL_VARIABLE_FSH_CWD: &str = "FSH_CWD";
 
-
+/// Shell variables.
 #[derive(Debug, Clone)]
 pub struct ShVars(HashMap<String, String>);
 
@@ -27,15 +26,16 @@ impl ShVars {
 
     /// Open a shell variables file.
     pub fn open(path: &Path) -> Result<Self> {
-        
         let mut vars = HashMap::new();
 
-        
         let file = match fs::read_to_string(path) {
             Ok(file) => file,
             Err(err) => {
                 if err.kind() == std::io::ErrorKind::NotFound {
-                    Err(Error::new(ErrorKind::NotFound, "shell variables file not found"))?
+                    Err(Error::new(
+                        ErrorKind::NotFound,
+                        "shell variables file not found",
+                    ))?
                 } else {
                     Err(Error::new(ErrorKind::Other, &err.to_string()))?
                 }
@@ -119,10 +119,12 @@ impl ShVars {
         })
     }
 
+    /// Get the prompt.
     pub fn get_prompt(&self) -> Result<&str> {
         self.get(RESERVEDWORD_SHELL_VARIABLE_FSH_PROMPT)
     }
 
+    /// Get the current working directory.
     pub fn get_cwd(&self) -> Result<&str> {
         self.get(RESERVEDWORD_SHELL_VARIABLE_FSH_CWD)
     }
@@ -174,16 +176,20 @@ impl ShVars {
 }
 
 impl From<HashMap<String, String>> for ShVars {
-
     /// Convert a `HashMap<String, String>` to `ShVars`.
+    ///
+    /// # Arguments
+    /// - `vars` - The `HashMap` to convert.
     fn from(vars: HashMap<String, String>) -> Self {
         Self(vars)
     }
 }
 
 impl From<HashMap<&str, &str>> for ShVars {
-
     /// Convert a `HashMap<&str, &str>` to `ShVars`.
+    ///
+    /// # Arguments
+    /// - `vars` - The `HashMap` to convert.
     fn from(vars: HashMap<&str, &str>) -> Self {
         let mut map = HashMap::new();
         for (key, value) in vars {
