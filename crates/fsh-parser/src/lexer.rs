@@ -2,7 +2,7 @@ use crate::preprocess::preprocess;
 
 use super::token::Token;
 
-const SYMBOLS: [char; 11] = [
+const RESERVED_SYMBOLS: [char; 11] = [
     SYMBOL_SEMICOLON,
     SYMBOL_EQUAL,
     SYMBOL_BACKSLASH,
@@ -127,7 +127,7 @@ impl Lexer {
             } else if is_single_quote {
                 c != SYMBOL_SINGLE_QUOTE
             } else {
-                !SYMBOLS.contains(&c) && !c.is_whitespace()
+                !RESERVED_SYMBOLS.contains(&c) && !c.is_whitespace()
             }
         });
 
@@ -165,7 +165,7 @@ impl Lexer {
 
         let start_position = self.position;
 
-        let (string, _) = self.read_while(|c| !c.is_whitespace() && !SYMBOLS.contains(&c));
+        let (string, _) = self.read_while(|c| !c.is_whitespace() && !RESERVED_SYMBOLS.contains(&c));
 
         match string.into_iter().collect::<String>().parse::<usize>() {
             Ok(number) => Ok(Some(number)),
@@ -193,7 +193,7 @@ impl Lexer {
             Err("invalid ident".to_string())?
         }
 
-        let (string, _) = self.read_while(|c| !c.is_whitespace() && !SYMBOLS.contains(&c));
+        let (string, _) = self.read_while(|c| !c.is_whitespace() && !RESERVED_SYMBOLS.contains(&c));
 
         if string.is_empty() {
             self.position = start_position;
@@ -240,7 +240,7 @@ impl Lexer {
             Err("invalid file descriptor".to_string())?
         }
 
-        let (string, _) = self.read_while(|c| !c.is_whitespace() && !SYMBOLS.contains(&c));
+        let (string, _) = self.read_while(|c| !c.is_whitespace() && !RESERVED_SYMBOLS.contains(&c));
 
         match string.into_iter().collect::<String>().parse::<usize>() {
             Ok(number) => Ok(Some(number)),
