@@ -80,7 +80,7 @@ fn execute_builtin_command(name: &String, args: &Vec<String>, state: &mut State)
 
         _ => Err(Error::new(
             ErrorKind::NotFound,
-            &format!("fsh: {}: command not found", name),
+            &format!("{name}: command not found"),
         ))?,
     }
 
@@ -211,12 +211,10 @@ fn execute_process_command(
     // spawn the process
     let child = ps_command.spawn().map_err(|err| {
         if err.kind() == std::io::ErrorKind::NotFound {
-            Error::new(
-                ErrorKind::NotFound,
-                &format!("fsh: {}: command not found", name),
-            )
+            Error::new(ErrorKind::NotFound, &format!("{name}: command not found"))
         } else {
-            Error::new(ErrorKind::Other, &format!("fsh: {}", err.to_string()))
+            let err_msg = err.to_string();
+            Error::new(ErrorKind::Other, &err_msg)
         }
     })?;
 
