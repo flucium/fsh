@@ -1,6 +1,5 @@
-use std::path::{Path, PathBuf};
-
 use super::{pipe::*, process_handler::*};
+use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
 pub struct State {
@@ -15,7 +14,7 @@ impl State {
         Self {
             handler: ProcessHandler::new(),
             pipe: Pipe::new(),
-            current_dir:PathBuf::new(),
+            current_dir: PathBuf::new(),
         }
     }
 
@@ -47,5 +46,53 @@ impl State {
     /// Get the mutable current directory.
     pub fn current_dir_mut(&mut self) -> &mut PathBuf {
         &mut self.current_dir
+    }
+}
+
+impl From<PathBuf> for State {
+    /// Creates a new state with the given path.
+    ///
+    /// # Arguments
+    /// - `path` - The path to set as the current directory.
+    fn from(path: PathBuf) -> Self {
+        let mut state = State::new();
+        *state.current_dir_mut() = path;
+        state
+    }
+}
+
+impl From<&Path> for State {
+    /// Creates a new state with the given path.
+    ///
+    /// # Arguments
+    /// - `path` - The path to set as the current directory.
+    fn from(path: &Path) -> Self {
+        let mut state = State::new();
+        *state.current_dir_mut() = path.to_path_buf();
+        state
+    }
+}
+
+impl From<String> for State {
+    /// Creates a new state with the given path.
+    ///
+    /// # Arguments
+    /// - `path` - The path to set as the current directory.
+    fn from(path: String) -> Self {
+        let mut state = State::new();
+        *state.current_dir_mut() = PathBuf::from(path);
+        state
+    }
+}
+
+impl From<&str> for State {
+    /// Creates a new state with the given path.
+    ///
+    /// # Arguments
+    /// - `path` - The path to set as the current directory.
+    fn from(path: &str) -> Self {
+        let mut state = State::new();
+        *state.current_dir_mut() = PathBuf::from(path);
+        state
     }
 }
