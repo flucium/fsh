@@ -7,4 +7,5 @@ rustup default 1.77.2 && \
 mkdir ~/repos && \
 cd ~/repos && \
 git clone git@github.com:flucium/fsh.git && \
+mkdir ./fsh/temp && \
 ls
