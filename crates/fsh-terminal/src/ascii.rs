@@ -1,9 +1,15 @@
-
 /// Represents the ASCII escape codes for the cursor.
 pub(super) enum Cursor {
+    /// Move the cursor to the specified position.
     Move(usize),
+
+    /// Move the cursor back one position.
     Backspace,
+
+    /// Move the cursor left one position.
     Left,
+
+    /// Move the cursor right one position.
     Right,
     // ClearLine,
 }
