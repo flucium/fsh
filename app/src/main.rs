@@ -7,7 +7,7 @@ use clap::Parser as _;
 use fsh_common::ErrorKind;
 use fsh_engine::{execute, ShVars, State};
 use fsh_parser::Parser;
-use fsh_terminal::Terminal;
+use fsh_terminal::{prompt, Terminal};
 
 /// The command-line arguments.
 #[derive(Debug, clap::Parser)]
@@ -145,7 +145,7 @@ fn repl() {
             .current_dir_mut()
             .push(sh_vars.get_cwd().unwrap_or_default());
 
-        terminal.update_prompt(sh_vars.get_prompt().unwrap_or_default());
+        terminal.update_prompt(prompt(sh_vars.get_prompt().unwrap_or_default()));
 
         match terminal.read_line() {
             Ok(input) => {
