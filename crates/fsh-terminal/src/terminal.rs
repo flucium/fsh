@@ -1,9 +1,7 @@
-use std::io;
-use std::io::Write;
-
 use super::ascii;
 use super::line::*;
 use fsh_common::{Error, ErrorKind, Result};
+use std::io::{self, Write};
 
 /// Get character (u8) from stdin.
 #[inline]
@@ -199,6 +197,46 @@ impl Terminal {
                         continue;
                     }
 
+                    stdout
+                        .write_all(format!("{}", ascii::Cursor::Left.get_esc_code()).as_bytes())
+                        .map_err(|_| Error::new(ErrorKind::Unknown, "unknown error"))?;
+
+                    stdout
+                        .write_all(b" ")
+                        .map_err(|_| Error::new(ErrorKind::Unknown, "unknown error"))?;
+
+                    stdout
+                        .write_all(
+                            format!("{}", ascii::Cursor::Backspace.get_esc_code()).as_bytes(),
+                        )
+                        .map_err(|_| Error::new(ErrorKind::Unknown, "unknown error"))?;
+
+                    stdout
+                        .write_all(format!("{}", ascii::Cursor::Left.get_esc_code()).as_bytes())
+                        .map_err(|_| Error::new(ErrorKind::Unknown, "unknown error"))?;
+
+                    line.backspace();
+
+                    stdout
+                        .write_all(format!("\r{}{}", self.prompt, line.to_string()).as_bytes())
+                        .map_err(|_| Error::new(ErrorKind::Unknown, "unknown error"))?;
+
+                    stdout
+                        .write_all(
+                            format!(
+                                "{}",
+                                ascii::Cursor::Move(self.prompt.len() + line.position() + 1)
+                                    .get_esc_code()
+                            )
+                            .as_bytes(),
+                        )
+                        .map_err(|_| Error::new(ErrorKind::Unknown, "unknown error"))?;
+                }
+
+                // Insert character.
+                _ => {
+                    line.insert(ch);
+
                     for i in 0..line.len() {
                         if i != 0 {
                             stdout
@@ -214,62 +252,14 @@ impl Terminal {
                         .write_all(format!("\r{}{}", self.prompt, line.to_string()).as_bytes())
                         .map_err(|_| Error::new(ErrorKind::Unknown, "unknown error"))?;
 
-                    line.backspace();
-
-                    stdout
-                        .write_all(
-                            format!("{}", ascii::Cursor::Backspace.get_esc_code()).as_bytes(),
-                        )
-                        .map_err(|_| Error::new(ErrorKind::Unknown, "unknown error"))?;
-
-                    stdout
-                        .write_all(format!("\r{}{}", self.prompt, line.to_string(),).as_bytes())
-                        .map_err(|_| Error::new(ErrorKind::Unknown, "unknown error"))?;
-
                     if line.position() < line.len() {
-                        let move_position = self.prompt.len() + line.position() - 1;
-
+                        let move_position = self.prompt.len() + line.position() + 1;
                         stdout
                             .write_all(
                                 format!("{}", ascii::Cursor::Move(move_position).get_esc_code())
                                     .as_bytes(),
                             )
                             .map_err(|_| Error::new(ErrorKind::Unknown, "unknown error"))?;
-                    }
-                }
-
-                // Insert character.
-                _ => {
-                    line.insert(ch);
-
-                    for i in 0..line.len() {
-                        if i != 0 {
-                            stdout
-                                .write_all(
-                                    format!("{}", ascii::Cursor::Backspace.get_esc_code())
-                                        .as_bytes(),
-                                )
-                                .map_err(|_| {
-                                    Error::new(ErrorKind::Other, "failed to write to stdout")
-                                })?;
-                        }
-                    }
-
-                    stdout
-                        .write_all(format!("\r{}{}", self.prompt, line.to_string()).as_bytes())
-                        .map_err(|_| Error::new(ErrorKind::Other, "failed to write to stdout"))?;
-
-                    if line.position() < line.len() {
-                        let move_position = line.len() + line.position();
-
-                        stdout
-                            .write_all(
-                                format!("{}", ascii::Cursor::Move(move_position).get_esc_code())
-                                    .as_bytes(),
-                            )
-                            .map_err(|_| {
-                                Error::new(ErrorKind::Other, "failed to write to stdout")
-                            })?;
                     }
                 }
             }
