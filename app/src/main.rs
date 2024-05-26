@@ -9,6 +9,25 @@ use fsh_engine::{execute, ShVars, State};
 use fsh_parser::Parser;
 use fsh_terminal::Terminal;
 
+/// The command-line arguments.
+#[derive(Debug, clap::Parser)]
+#[clap(name = manifest::MANIFEST_FSH_NAME, version = manifest::MANIFEST_FSH_VERSION, author = manifest::MANIFEST_FSH_AUTHORS)]
+struct Args {
+    #[clap(short = 'p', long = "profile")]
+    profile: Option<String>,
+}
+
+/// Parses the command-line arguments.
+///
+/// # Returns
+/// - 1 The profile path.
+fn args() -> String {
+    let args = Args::parse();
+
+    args.profile
+        .unwrap_or_else(|| profile::DEFAULT_PROFILE_PATH.to_string())
+}
+
 /// Initializes the shell profile.
 ///
 /// # Arguments
@@ -93,44 +112,54 @@ fn init_terminal(sh_vars: &mut ShVars) -> Terminal {
     terminal
 }
 
-#[derive(Debug, clap::Parser)]
-#[clap(name = manifest::MANIFEST_FSH_NAME, version = manifest::MANIFEST_FSH_VERSION, author = manifest::MANIFEST_FSH_AUTHORS)]
-struct Args {
-    #[clap(short = 'p', long = "profile")]
-    profile: Option<String>,
-}
+/// Initializes the shell.
+///
+/// # Returns
+/// - 1 The terminal.
+/// - 2 The shell state.
+/// - 3 The shell variables.
+fn initialize() -> (Terminal, State, ShVars) {
+    // Get the profile path.
+    let profile_path = args();
 
-fn main() {
-    let args = Args::parse();
-
-    let path = args
-        .profile
-        .unwrap_or_else(|| profile::DEFAULT_PROFILE_PATH.to_string());
-
-    let mut sh_vars = init_engine_sh_vars();
-
+    // Initialize the shell state.
     let mut state = init_engine_state();
 
-    let mut terminal = init_terminal(&mut sh_vars);
+    // Initialize the shell variables.
+    let mut sh_vars = init_engine_sh_vars();
 
-    init_profile(&mut state, &mut sh_vars, path);
+    // Initialize the shell profile.
+    init_profile(&mut state, &mut sh_vars, profile_path);
+
+    // Initialize the terminal.
+    let terminal = init_terminal(&mut sh_vars);
+
+    (terminal, state, sh_vars)
+}
+
+fn repl() {
+    let (mut terminal, mut state, mut sh_vars) = initialize();
 
     loop {
-        state
-            .current_dir_mut()
-            .push(sh_vars.get_cwd().unwrap_or_default());
+        match terminal.read_line() {
+            Ok(input) => {
+                if input.is_empty() {
+                    continue;
+                }
 
-        terminal.set_prompt(sh_vars.get_prompt().unwrap_or_default());
+                let mut parser = Parser::new(&input);
 
-        let input = terminal.read_line().unwrap();
-
-        let mut parser = Parser::new(&input);
-
-        match parser.parse() {
-            Ok(ast) => {
-                if let Err(err) = execute(ast, &mut state, &mut sh_vars) {
-                    let msg = err.message();
-                    fsh_eprintln!("{msg}", err.kind());
+                match parser.parse() {
+                    Ok(ast) => {
+                        if let Err(err) = execute(ast, &mut state, &mut sh_vars) {
+                            let msg = err.message();
+                            fsh_eprintln!("{msg}", err.kind());
+                        }
+                    }
+                    Err(err) => {
+                        let msg = err.message();
+                        fsh_eprintln!("{msg}", err.kind());
+                    }
                 }
             }
             Err(err) => {
@@ -139,4 +168,8 @@ fn main() {
             }
         }
     }
+}
+
+fn main() {
+    repl();
 }
