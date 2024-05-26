@@ -105,11 +105,11 @@ fn init_engine_sh_vars() -> ShVars {
 
 /// Initializes the terminal.
 fn init_terminal(sh_vars: &mut ShVars) -> Terminal {
-    let mut terminal = Terminal::new();
+    // let mut terminal = Terminal::new();
 
-    terminal.set_prompt(sh_vars.get_prompt().unwrap_or_default());
+    // terminal.set_prompt(sh_vars.get_prompt().unwrap_or_default());
 
-    terminal
+    Terminal::from(sh_vars.get_prompt().unwrap_or_default())
 }
 
 /// Initializes the shell.
