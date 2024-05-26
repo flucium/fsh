@@ -141,6 +141,12 @@ fn repl() {
     let (mut terminal, mut state, mut sh_vars) = initialize();
 
     loop {
+        state
+            .current_dir_mut()
+            .push(sh_vars.get_cwd().unwrap_or_default());
+
+        terminal.update_prompt(sh_vars.get_prompt().unwrap_or_default());
+
         match terminal.read_line() {
             Ok(input) => {
                 if input.is_empty() {
