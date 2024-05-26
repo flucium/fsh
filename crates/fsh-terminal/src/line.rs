@@ -27,12 +27,12 @@ impl Line {
     }
 
     /// Moves the cursor to the left.
-    pub(super) fn left(&mut self) {
+    pub(super) fn move_left(&mut self) {
         self.0 -= 1;
     }
 
     /// Moves the cursor to the right.
-    pub(super) fn right(&mut self) {
+    pub(super) fn move_right(&mut self) {
         self.0 += 1;
     }
 
@@ -116,7 +116,7 @@ mod tests {
         line.insert(b'l');
         line.insert(b'o');
 
-        line.left();
+        line.move_left();
 
         assert_eq!(line.0, 4);
     }
@@ -131,8 +131,8 @@ mod tests {
         line.insert(b'l');
         line.insert(b'o');
 
-        line.left();
-        line.right();
+        line.move_left();
+        line.move_right();
 
         assert_eq!(line.0, 5);
     }
