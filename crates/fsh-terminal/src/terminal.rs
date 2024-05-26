@@ -249,8 +249,27 @@ impl Terminal {
                                     format!("{}", ascii::Cursor::Backspace.get_esc_code())
                                         .as_bytes(),
                                 )
-                                .map_err(|_| Error::new(ErrorKind::Unknown, "unknown error"))?;
+                                .map_err(|_| {
+                                    Error::new(ErrorKind::Other, "failed to write to stdout")
+                                })?;
                         }
+                    }
+
+                    stdout
+                        .write_all(format!("\r{}{}", self.prompt, line.to_string()).as_bytes())
+                        .map_err(|_| Error::new(ErrorKind::Other, "failed to write to stdout"))?;
+
+                    if line.position() < line.len() {
+                        let move_position = line.len() + line.position();
+
+                        stdout
+                            .write_all(
+                                format!("{}", ascii::Cursor::Move(move_position).get_esc_code())
+                                    .as_bytes(),
+                            )
+                            .map_err(|_| {
+                                Error::new(ErrorKind::Other, "failed to write to stdout")
+                            })?;
                     }
                 }
             }
@@ -271,7 +290,7 @@ impl Terminal {
 
         // Convert line to string.
         let line = line.to_string();
-        
+
         Ok(line)
     }
 }
