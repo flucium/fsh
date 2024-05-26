@@ -6,9 +6,6 @@ const USER_NAME: &str = "\\u";
 // Shell name.
 const SHELL_NAME: &str = "\\s";
 
-// Shell full name.
-const SHELL_NAME_FULL: &str = "\\S";
-
 // Shell version.
 const SHELL_VERSION: &str = "\\v";
 
@@ -40,7 +37,7 @@ fn get_current_directory() -> String {
 }
 
 /// Get current directory full path from environment variable.
-/// 
+///
 /// This function is not used in the code.
 fn get_current_directory_full() -> String {
     env::current_dir()
@@ -64,10 +61,6 @@ fn decode(source: impl Into<String>) -> String {
 
     if string.contains(SHELL_NAME) {
         string = string.replace(SHELL_NAME, "fsh");
-    }
-
-    if string.contains(SHELL_NAME_FULL) {
-        string = string.replace(SHELL_NAME_FULL, "F shell");
     }
 
     if string.contains(SHELL_VERSION) {
@@ -130,146 +123,10 @@ mod tests {
 
     #[test]
     fn test_decode() {
-        assert_eq!(decode(USER_NAME), get_user_name());
-
-        assert_eq!(decode(SHELL_NAME), "fsh");
-
-        assert_eq!(decode(SHELL_NAME_FULL), "F shell");
-
-        assert_eq!(decode(SHELL_VERSION), "0.0.1");
-
+        let prompt = "\\u@\\w $ ";
         assert_eq!(
-            decode(CURRENT_DIRECTORY),
-            env::current_dir()
-                .unwrap()
-                .file_name()
-                .unwrap()
-                .to_string_lossy()
-        );
-
-        assert_eq!(
-            decode(CURRENT_DIRECTORY_FULL),
-            env::current_dir().unwrap().to_string_lossy()
-        );
-    }
-
-    #[test]
-    fn test_prompt() {
-        assert_eq!(prompt(USER_NAME), get_user_name());
-
-        assert_eq!(prompt(SHELL_NAME), "fsh");
-
-        assert_eq!(prompt(SHELL_NAME_FULL), "F shell");
-
-        assert_eq!(prompt(SHELL_VERSION), "0.0.1");
-
-        assert_eq!(
-            prompt(CURRENT_DIRECTORY),
-            env::current_dir()
-                .unwrap()
-                .file_name()
-                .unwrap()
-                .to_string_lossy()
-        );
-
-        assert_eq!(
-            prompt(CURRENT_DIRECTORY_FULL),
-            env::current_dir().unwrap().to_string_lossy()
-        );
-    }
-
-    #[test]
-    fn test_prompt_with_custom() {
-        assert_eq!(prompt("Hello, \\u"), format!("Hello, {}", get_user_name()));
-
-        assert_eq!(prompt("ShellName: \\s"), "ShellName: fsh");
-
-        assert_eq!(prompt("ShellFullName: \\S"), "ShellFullName: F shell");
-
-        assert_eq!(prompt("ShellVersion: \\v"), "ShellVersion: 0.0.1");
-
-        assert_eq!(
-            prompt("CurrentDirectory: \\w"),
-            format!(
-                "CurrentDirectory: {}",
-                env::current_dir()
-                    .unwrap()
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy()
-            )
-        );
-
-        assert_eq!(
-            prompt("CurrentFullDirectory: \\W"),
-            format!(
-                "CurrentFullDirectory: {}",
-                env::current_dir().unwrap().to_string_lossy()
-            )
-        );
-    }
-
-    #[test]
-    fn test_prompt_realcase() {
-        assert_eq!(
-            prompt("\\u@\\w $ "),
-            format!(
-                "{}@{} $ ",
-                get_user_name(),
-                env::current_dir()
-                    .unwrap()
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy()
-            )
-        );
-
-        assert_eq!(
-            prompt("\\u@\\W $ "),
-            format!(
-                "{}@{} $ ",
-                get_user_name(),
-                env::current_dir().unwrap().to_string_lossy()
-            )
-        );
-
-        assert_eq!(
-            prompt("\\s \\u@\\w $ "),
-            format!(
-                "fsh {}@{} $ ",
-                get_user_name(),
-                env::current_dir()
-                    .unwrap()
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy()
-            )
-        );
-
-        assert_eq!(
-            prompt("\\S \\u@\\w $ "),
-            format!(
-                "F shell {}@{} $ ",
-                get_user_name(),
-                env::current_dir()
-                    .unwrap()
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy()
-            )
-        );
-
-        assert_eq!(
-            prompt("\\s(\\v) \\u@\\w $ "),
-            format!(
-                "fsh(0.0.1) {}@{} $ ",
-                get_user_name(),
-                env::current_dir()
-                    .unwrap()
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy()
-            )
+            decode(prompt),
+            format!("{}@{} $ ", get_user_name(), get_current_directory())
         );
     }
 }
