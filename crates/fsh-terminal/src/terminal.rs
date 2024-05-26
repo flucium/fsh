@@ -275,3 +275,29 @@ impl Terminal {
         Ok(line)
     }
 }
+
+impl From<String> for Terminal {
+    /// Create a new Terminal obj with a prompt.
+    ///
+    /// # Arguments
+    /// - `prompt` - Prompt string.
+    fn from(prompt: String) -> Self {
+        Self {
+            termios: termios(),
+            prompt,
+        }
+    }
+}
+
+impl From<&str> for Terminal {
+    /// Create a new Terminal obj with a prompt.
+    ///
+    /// # Arguments
+    /// - `prompt` - Prompt string.
+    fn from(prompt: &str) -> Self {
+        Self {
+            termios: termios(),
+            prompt: prompt.to_string(),
+        }
+    }
+}
