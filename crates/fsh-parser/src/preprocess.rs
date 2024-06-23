@@ -48,10 +48,16 @@ pub(super) fn preprocess(string: &str) -> String {
 fn remove_comment(string: &str) -> String {
     let mut is_comment = false;
 
+    let mut is_quote = false;
+
     let mut result = String::with_capacity(string.len());
 
     string.chars().for_each(|c| {
-        if c == '#' {
+        if c == '"' || c == '\'' {
+            is_quote = !is_quote;
+        }
+
+        if c == '#' && is_quote == false {
             is_comment = true;
         }
 
