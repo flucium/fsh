@@ -15,11 +15,11 @@ pub const DEFAULT_PROFILE_PATH: &str = "./temp/profile.fsh";
 
 /// Default profile content.
 #[cfg(not(debug_assertions))]
-const DEFAULT_PROFILE_CONTENT: &str = "FSH_PROMPT=\"# \"\nFSH_HISTORY = true\nFSH_HISTORY_SIZE = 1000\nFSH_HISTORY_FILE = \"~/.fsh_history\"";
+const DEFAULT_PROFILE_CONTENT: &str = "$FSH_PROMPT = \"# \"";
 
 /// Default profile content.
 #[cfg(debug_assertions)]
-const DEFAULT_PROFILE_CONTENT: &str = "FSH_PROMPT=\"# \"\nFSH_HISTORY = true\nFSH_HISTORY_SIZE = 1000\nFSH_HISTORY_FILE = \"../temp/fsh_history\"";
+const DEFAULT_PROFILE_CONTENT: &str = "$FSH_PROMPT = \"# \"";
 
 /// Creates a new profile at the specified path.
 ///
