@@ -1,13 +1,6 @@
 # FSH
--Coming soon-
 
-***Version 0.0.1 will be released this summer.***
-
-*It was originally developed under the Repository name FlatShell (flatshell).*
-
-*The overall specification was decided, and the repository name was changed to FSH (fsh), which is also the name of the program.*
-
-*Archived: https://github.com/flucium/flatshell*
+...
 
 ## Build
 
