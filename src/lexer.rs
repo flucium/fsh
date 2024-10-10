@@ -1,4 +1,8 @@
-use crate::{error::Error, result::Result, token::Token};
+use crate::{
+    error::{Error, ErrorKind},
+    result::Result,
+    token::Token,
+};
 
 //
 // Reserved Keywords
@@ -115,7 +119,7 @@ impl Lexer {
             RESERVED_KEYWORD_NULL => Ok(Token::Null),
             _ => {
                 self.index = index;
-                Err(Error::NOT_IMPLEMENTED)
+                Err(Error::new(ErrorKind::InvalidSyntax, "invalid null token"))?
             }
         }
     }
@@ -129,17 +133,26 @@ impl Lexer {
 
         if string.is_empty() {
             self.index = index;
-            Err(Error::NOT_IMPLEMENTED)?
+            Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "a string cannot be empty",
+            ))?
         }
 
         if string.parse::<isize>().is_ok() {
             self.index = index;
-            Err(Error::NOT_IMPLEMENTED)?
+            Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "a number sequence cannot be interpreted as a string",
+            ))?
         }
 
         if RESERVED_KEYWORDS.contains(&string.as_str()) {
             self.index = index;
-            Err(Error::NOT_IMPLEMENTED)?
+            Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "reserved keyword cannot be interpreted as a string",
+            ))?
         }
 
         Ok(Token::String(string))
@@ -153,7 +166,8 @@ impl Lexer {
             Some(&RESERVED_CHAR_DOUBLE_QUOTE) => (false, true),
             _ => {
                 self.index = index;
-                Err(Error::NOT_IMPLEMENTED)?
+                Err(Error::new(ErrorKind::InvalidSyntax, 
+                "it cannot be interpreted as a quoted string if it does not begin with a quotation mark"))?
             }
         };
 
@@ -161,7 +175,9 @@ impl Lexer {
             self.advance();
         } else {
             self.index = index;
-            Err(Error::NOT_IMPLEMENTED)?
+            Err(Error::new(ErrorKind::InvalidSyntax, 
+                "it cannot be interpreted as a quoted string if it does not begin with a quotation mark"))?
+            
         }
 
         let string = self.read_while(|c| {
@@ -176,7 +192,7 @@ impl Lexer {
             self.advance();
         } else {
             self.index = index;
-            Err(Error::NOT_IMPLEMENTED)?
+            Err(Error::new(ErrorKind::InvalidSyntax,"a string that starts with a quote must end with a quote"))?
         }
 
         Ok(Token::String(string))
@@ -189,14 +205,16 @@ impl Lexer {
             self.advance();
         } else {
             self.index = index;
-            Err(Error::NOT_IMPLEMENTED)?
+            Err(Error::new(ErrorKind::InvalidSyntax, 
+                "it cannot be interpreted as an identifier if it does not begin with a dollar sign"))?
         }
 
         let string = self.read_while(|c| !c.is_whitespace() && !RESERVED_CHARS.contains(&c));
 
         if string.is_empty() {
             self.index = index;
-            Err(Error::NOT_IMPLEMENTED)?
+            Err(Error::new(ErrorKind::InvalidSyntax, 
+                "an identifier cannot be empty"))?
         }
 
         Ok(Token::Identifier(string))
@@ -211,7 +229,7 @@ impl Lexer {
             Ok(n) => Ok(Token::Number(n)),
             Err(_) => {
                 self.index = index;
-                Err(Error::NOT_IMPLEMENTED)
+                Err(Error::new(ErrorKind::InvalidSyntax,"it could not be interpreted as a number"))?
             }
         }
     }
@@ -227,7 +245,7 @@ impl Lexer {
             RESERVED_KEYWORD_FALSE => Ok(Token::Boolean(false)),
             _ => {
                 self.index = index;
-                Err(Error::NOT_IMPLEMENTED)
+                Err(Error::new(ErrorKind::InvalidSyntax,"it could not be interpreted as a boolean"))?
             }
         }
     }
@@ -239,7 +257,8 @@ impl Lexer {
             self.advance();
         } else {
             self.index = index;
-            Err(Error::NOT_IMPLEMENTED)?
+            Err(Error::new(ErrorKind::InvalidSyntax, 
+                "it cannot be interpreted as a file descriptor if it does not begin with an at sign"))?
         }
 
         let string = self.read_while(|c| !c.is_whitespace() && !RESERVED_CHARS.contains(&c));
@@ -248,7 +267,7 @@ impl Lexer {
             Ok(n) => Ok(Token::FileDescriptor(n)),
             Err(_) => {
                 self.index = index;
-                Err(Error::NOT_IMPLEMENTED)
+                Err(Error::new(ErrorKind::InvalidSyntax,"it could not be interpreted as a file descriptor"))?
             }
         }
     }
@@ -336,7 +355,7 @@ impl Lexer {
         if self.index >= self.length {
             return Ok(Token::EOF);
         } else {
-            Err(Error::NOT_IMPLEMENTED)
+            Err(Error::new(ErrorKind::InvalidSyntax, "invalid token"))?
         }
     }
 }
