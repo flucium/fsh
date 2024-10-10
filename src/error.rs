@@ -3,7 +3,8 @@ pub enum ErrorKind {
     NotImplemented,
     Internal,
     Other,
-
+    
+    InvalidSyntax,
     PermissionDenied,
     NotFound,
 }
