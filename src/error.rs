@@ -3,10 +3,36 @@ pub enum ErrorKind {
     NotImplemented,
     Internal,
     Other,
-    
+
     InvalidSyntax,
     PermissionDenied,
     NotFound,
+}
+
+impl ErrorKind {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::NotImplemented => "not implemented",
+            Self::Internal => "internal error",
+            Self::Other => "other error",
+            Self::InvalidSyntax => "invalid syntax",
+            Self::PermissionDenied => "permission denied",
+            Self::NotFound => "not found",
+        }
+    }
+}
+
+impl ToString for ErrorKind {
+    fn to_string(&self) -> String {
+        match self {
+            Self::NotImplemented => String::from("not implemented"),
+            Self::Internal => String::from("internal error"),
+            Self::Other => String::from("other error"),
+            Self::InvalidSyntax => String::from("invalid syntax"),
+            Self::PermissionDenied => String::from("permission denied"),
+            Self::NotFound => String::from("not found"),
+        }
+    }
 }
 
 impl AsRef<ErrorKind> for ErrorKind {
