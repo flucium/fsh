@@ -7,7 +7,7 @@ pub mod result;
 pub mod sh_vars;
 pub mod state;
 pub mod terminal;
-
+pub mod profile;
 //
 // pub crate
 //
