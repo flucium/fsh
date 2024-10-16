@@ -19,36 +19,8 @@ use crate::{
     result::Result,
     sh_vars::ShVars,
     state::State,
+    utils::globbing,
 };
-
-fn globbing(path: &str) -> Vec<String> {
-    if path.is_empty() {
-        return vec![path.to_string()];
-    }
-
-    let mut v = Vec::new();
-
-    match glob::glob(&path) {
-        Ok(paths) => {
-            let paths = paths
-                .map(|path| path.unwrap().to_str().unwrap().to_string())
-                .collect::<Vec<String>>();
-
-            if paths.len() > 0 {
-                for path in paths {
-                    v.push(path);
-                }
-            } else {
-                return vec![path.to_string()];
-            }
-        }
-        Err(_) => return vec![path.to_string()],
-    };
-
-    v
-}
-
-
 
 fn execute_assignment(assignment: Assignment, sh_vars: &mut ShVars) -> Result<()> {
     let identifier = match assignment.identifier() {
