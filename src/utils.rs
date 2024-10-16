@@ -1,4 +1,5 @@
 use crate::token::Token;
+use std::env;
 
 pub fn split(place: &Token, tokens: &[Token]) -> (Vec<Token>, Vec<Token>) {
     if tokens.contains(place) == false {
@@ -38,4 +39,39 @@ pub fn recursion_split(place: &Token, tokens: &[Token]) -> Vec<Vec<Token>> {
     }
 
     result
+}
+
+pub fn expand_home_directory(path: &str) -> String {
+    if path.starts_with("~") {
+        env::var("HOME").unwrap_or_else(|_| String::from("/")) + &path[1..]
+    } else {
+        path.to_string()
+    }
+}
+
+pub fn globbing(path: &str) -> Vec<String> {
+    if path.is_empty() {
+        return Vec::new();
+    }
+
+    let mut v = Vec::new();
+
+    glob::glob(&path)
+        .map(|paths| {
+            paths
+                .map(|path| path.unwrap_or_default().to_string_lossy().to_string())
+                .collect::<Vec<String>>()
+        })
+        .map(|paths| {
+            if paths.len() > 0 {
+                for path in paths {
+                    v.push(path);
+                }
+            } else {
+                v.push(path.to_string());
+            }
+        })
+        .unwrap_or_else(|_| v.push(path.to_string()));
+
+    v
 }
