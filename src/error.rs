@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug, PartialEq)]
 pub enum ErrorKind {
     NotImplemented,
@@ -64,5 +66,11 @@ impl Error {
 
     pub fn message(&self) -> &str {
         &self.message
+    }
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}", self.kind.as_str(), self.message)
     }
 }
