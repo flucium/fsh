@@ -80,7 +80,7 @@ impl Parser {
         let tokens = self
             .tokens
             .get(self.index..self.length - self.index)
-            .ok_or(Error::NOT_IMPLEMENTED)?;
+            .ok_or(Error::new(ErrorKind::InvalidSyntax, "invalid pipe"))?;
 
         let pipe = lite_parser::parse_pipe(tokens)?;
 
@@ -126,48 +126,51 @@ pub mod lite_parser {
     pub fn parse_null(token: &Token) -> Result<Expression> {
         match token {
             Token::Null => Ok(Expression::Null),
-            _ => Err(Error::NOT_IMPLEMENTED),
+            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid null")),
         }
     }
 
     pub fn parse_string(token: &Token) -> Result<Expression> {
         match token {
             Token::String(s) => Ok(Expression::String(s.clone())),
-            _ => Err(Error::NOT_IMPLEMENTED),
+            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid string")),
         }
     }
 
     pub fn parse_identifier(token: &Token) -> Result<Expression> {
         match token {
             Token::Identifier(s) => Ok(Expression::Identifier(s.clone())),
-            _ => Err(Error::NOT_IMPLEMENTED),
+            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid identifier")),
         }
     }
 
     pub fn parse_boolean(token: &Token) -> Result<Expression> {
         match token {
             Token::Boolean(b) => Ok(Expression::Boolean(*b)),
-            _ => Err(Error::NOT_IMPLEMENTED),
+            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid boolean")),
         }
     }
 
     pub fn parse_number(token: &Token) -> Result<Expression> {
         match token {
             Token::Number(n) => Ok(Expression::Number(*n)),
-            _ => Err(Error::NOT_IMPLEMENTED),
+            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid number")),
         }
     }
 
     pub fn parse_file_descriptor(token: &Token) -> Result<Expression> {
         match token {
             Token::FileDescriptor(n) => Ok(Expression::FileDescriptor(*n)),
-            _ => Err(Error::NOT_IMPLEMENTED),
+            _ => Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "invalid file descriptor",
+            )),
         }
     }
 
     pub fn parse_assignment(tokens: &[Token; 3]) -> Result<Assignment> {
         if tokens[1] != Token::Equal {
-            Err(Error::NOT_IMPLEMENTED)?
+            Err(Error::new(ErrorKind::InvalidSyntax, "invalid assignment"))?;
         }
 
         let identifier = parse_identifier(&tokens[0])?;
@@ -187,7 +190,7 @@ pub mod lite_parser {
 
             Token::LessThan => (Expression::FileDescriptor(0), RedirectOperator::LessThan),
 
-            _ => Err(Error::NOT_IMPLEMENTED)?,
+            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid redirect"))?,
         };
 
         let right = parse_string(&tokens[1])
@@ -204,7 +207,7 @@ pub mod lite_parser {
 
             Token::LessThan => RedirectOperator::LessThan,
 
-            _ => Err(Error::NOT_IMPLEMENTED)?,
+            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid redirect"))?,
         };
 
         let left = parse_file_descriptor(&tokens[0])?;
@@ -221,7 +224,7 @@ pub mod lite_parser {
         match tokens.len() {
             2 => parse_abbreviated_redirect(tokens.try_into().unwrap()),
             3 => parse_normal_redirect(tokens.try_into().unwrap()),
-            _ => Err(Error::NOT_IMPLEMENTED),
+            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid redirect")),
         }
     }
 
@@ -264,7 +267,7 @@ pub mod lite_parser {
                         is_background = Expression::Boolean(true);
                         break;
                     } else {
-                        Err(Error::NOT_IMPLEMENTED)?
+                        Err(Error::new(ErrorKind::InvalidSyntax, "invalid ampersand"))?;
                     }
                 }
                 _ => {
@@ -288,7 +291,7 @@ pub mod lite_parser {
 
     pub fn parse_pipe(tokens: &[Token]) -> Result<Pipe> {
         if tokens.len() < 3 {
-            Err(Error::NOT_IMPLEMENTED)?
+            Err(Error::new(ErrorKind::InvalidSyntax, "invalid pipe"))?
         }
 
         let mut pipe = Pipe::new();
