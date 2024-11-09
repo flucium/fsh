@@ -126,35 +126,50 @@ pub mod lite_parser {
     pub fn parse_null(token: &Token) -> Result<Expression> {
         match token {
             Token::Null => Ok(Expression::Null),
-            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid null")),
+            _ => Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "expected 'null' keyword, but encountered an invalid token",
+            )),
         }
     }
 
     pub fn parse_string(token: &Token) -> Result<Expression> {
         match token {
             Token::String(s) => Ok(Expression::String(s.clone())),
-            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid string")),
+            _ => Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "expected 'string' token, but encountered an invalid token",
+            )),
         }
     }
 
     pub fn parse_identifier(token: &Token) -> Result<Expression> {
         match token {
             Token::Identifier(s) => Ok(Expression::Identifier(s.clone())),
-            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid identifier")),
+            _ => Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "expected 'identifier' token, but encountered an invalid token",
+            )),
         }
     }
 
     pub fn parse_boolean(token: &Token) -> Result<Expression> {
         match token {
             Token::Boolean(b) => Ok(Expression::Boolean(*b)),
-            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid boolean")),
+            _ => Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "expected 'boolean' token, but encountered an invalid token",
+            )),
         }
     }
 
     pub fn parse_number(token: &Token) -> Result<Expression> {
         match token {
             Token::Number(n) => Ok(Expression::Number(*n)),
-            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid number")),
+            _ => Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "expected 'number' token, but encountered an invalid token",
+            )),
         }
     }
 
@@ -163,14 +178,17 @@ pub mod lite_parser {
             Token::FileDescriptor(n) => Ok(Expression::FileDescriptor(*n)),
             _ => Err(Error::new(
                 ErrorKind::InvalidSyntax,
-                "invalid file descriptor",
+                "expected 'file descriptor' token, but encountered an invalid token",
             )),
         }
     }
 
     pub fn parse_assignment(tokens: &[Token; 3]) -> Result<Assignment> {
         if tokens[1] != Token::Equal {
-            Err(Error::new(ErrorKind::InvalidSyntax, "invalid assignment"))?;
+            Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "expected '=' in assignment, but encountered an invalid token",
+            ))?;
         }
 
         let identifier = parse_identifier(&tokens[0])?;
@@ -179,7 +197,13 @@ pub mod lite_parser {
             .or(parse_string(&tokens[2]))
             .or(parse_boolean(&tokens[2]))
             .or(parse_number(&tokens[2]))
-            .or(parse_file_descriptor(&tokens[2]))?;
+            .or(parse_file_descriptor(&tokens[2]))
+            .or_else(|_| {
+                Err(Error::new(
+                    ErrorKind::InvalidSyntax,
+                    "invalid assignment value",
+                ))
+            })?;
 
         Ok(Assignment::new(identifier, value))
     }
@@ -190,13 +214,22 @@ pub mod lite_parser {
 
             Token::LessThan => (Expression::FileDescriptor(0), RedirectOperator::LessThan),
 
-            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid redirect"))?,
+            _ => Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "expected redirect operator, but encountered an invalid token",
+            ))?,
         };
 
         let right = parse_string(&tokens[1])
             .or(parse_identifier(&tokens[1]))
             .or(parse_number(&tokens[1]))
-            .or(parse_file_descriptor(&tokens[1]))?;
+            .or(parse_file_descriptor(&tokens[1]))
+            .or_else(|_| {
+                Err(Error::new(
+                    ErrorKind::InvalidSyntax,
+                    "invalid redirect right-hand side",
+                ))
+            })?;
 
         Ok(Redirect::new(operator, left, right))
     }
@@ -207,15 +240,29 @@ pub mod lite_parser {
 
             Token::LessThan => RedirectOperator::LessThan,
 
-            _ => Err(Error::new(ErrorKind::InvalidSyntax, "invalid redirect"))?,
+            _ => Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "expected redirect operator, but encountered an invalid token",
+            ))?,
         };
 
-        let left = parse_file_descriptor(&tokens[0])?;
+        let left = parse_file_descriptor(&tokens[0]).or_else(|_| {
+            Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "invalid redirect left-hand side",
+            ))
+        })?;
 
         let right = parse_string(&tokens[2])
             .or(parse_identifier(&tokens[2]))
             .or(parse_number(&tokens[2]))
-            .or(parse_file_descriptor(&tokens[2]))?;
+            .or(parse_file_descriptor(&tokens[2]))
+            .or_else(|_| {
+                Err(Error::new(
+                    ErrorKind::InvalidSyntax,
+                    "invalid redirect right-hand side",
+                ))
+            })?;
 
         Ok(Redirect::new(operator, left, right))
     }
@@ -229,7 +276,14 @@ pub mod lite_parser {
     }
 
     fn parse_command_name(token: &Token) -> Result<Expression> {
-        parse_string(token).or(parse_identifier(token).or(parse_number(token)))
+        parse_string(token)
+            .or(parse_identifier(token).or(parse_number(token)))
+            .or_else(|_| {
+                Err(Error::new(
+                    ErrorKind::InvalidSyntax,
+                    "expected command name token, but encountered an invalid token",
+                ))
+            })
     }
 
     fn parse_command_arguments(
@@ -267,12 +321,22 @@ pub mod lite_parser {
                         is_background = Expression::Boolean(true);
                         break;
                     } else {
-                        Err(Error::new(ErrorKind::InvalidSyntax, "invalid ampersand"))?;
+                        Err(Error::new(
+                            ErrorKind::InvalidSyntax,
+                            "unexpected ampersand position",
+                        ))?;
                     }
                 }
                 _ => {
                     arguments.push(
-                        parse_number(token).or(parse_identifier(token).or(parse_string(token)))?,
+                        parse_number(token)
+                            .or(parse_identifier(token).or(parse_string(token)))
+                            .or_else(|_| {
+                                Err(Error::new(
+                                    ErrorKind::InvalidSyntax,
+                                    "invalid argument token",
+                                ))
+                            })?,
                     );
                 }
             }
@@ -291,7 +355,10 @@ pub mod lite_parser {
 
     pub fn parse_pipe(tokens: &[Token]) -> Result<Pipe> {
         if tokens.len() < 3 {
-            Err(Error::new(ErrorKind::InvalidSyntax, "invalid pipe"))?
+            Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "invalid pipe syntax; insufficient tokens",
+            ))?
         }
 
         let mut pipe = Pipe::new();
