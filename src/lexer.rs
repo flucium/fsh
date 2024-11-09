@@ -335,10 +335,6 @@ impl Lexer {
                 '0'..='9' => return self.read_number_token(),
 
                 _ => {
-                    // return self.read_number_token().or(self
-                    //     .read_boolean_token()
-                    //     .or(self.read_null_token().or(self.read_string_token())));
-
                     return self
                         .read_number_token()
                         .or(self.read_boolean_token())
