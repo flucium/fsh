@@ -83,10 +83,6 @@ impl Lexer {
         self.source.get(self.index)
     }
 
-    // fn peek(&self) -> Option<&char> {
-    //     self.source.get(self.index + 1)
-    // }
-
     fn advance(&mut self) {
         self.index += 1;
     }
@@ -301,29 +297,11 @@ impl Lexer {
                 }
 
                 RESERVED_CHAR_LESS_THAN => {
-                    // if self.peek() == Some(&RESERVED_CHAR_LESS_THAN) {
-                    //     self.advance();
-                    //     self.advance();
-                    //     return Ok(Token::LessThanLessThan);
-                    // } else {
-                    //     self.advance();
-                    //     return Ok(Token::LessThan);
-                    // }
-
                     self.advance();
                     return Ok(Token::LessThan);
                 }
 
                 RESERVED_CHAR_GREATER_THAN => {
-                    // if self.peek() == Some(&RESERVED_CHAR_GREATER_THAN) {
-                    //     self.advance();
-                    //     self.advance();
-                    //     return Ok(Token::GreaterThanGreaterThan);
-                    // } else {
-                    //     self.advance();
-                    //     return Ok(Token::GreaterThan);
-                    // }
-
                     self.advance();
                     return Ok(Token::GreaterThan);
                 }
