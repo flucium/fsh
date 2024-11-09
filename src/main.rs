@@ -78,7 +78,25 @@ fn stderr(msg: &str) {
     }
 }
 
+fn welcome_art() {
+    let art = r#"
++---------------------------------+
+|                                 |
+| >_                              |
+|                                 |
+| Welcome to FSH                  |
+|                                 |
+| https://github.com/flucium/fsh  |
+|                                 |
++---------------------------------+
+"#;
+    if io::stdout().write_all(art.as_bytes()).is_err() {
+        stderr("failed to write to stdout");
+    }
+}
+
 fn main() {
+    welcome_art();
     let (mut state, mut sh_vars) = initialize();
 
     let mut terminal = fsh::terminal::Terminal::new();
