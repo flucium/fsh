@@ -115,7 +115,10 @@ impl Lexer {
             RESERVED_KEYWORD_NULL => Ok(Token::Null),
             _ => {
                 self.index = index;
-                Err(Error::new(ErrorKind::InvalidSyntax, "invalid null token"))?
+                Err(Error::new(
+                    ErrorKind::InvalidSyntax,
+                    "expected 'null' keyword, but encountered an invalid token",
+                ))?
             }
         }
     }
@@ -129,26 +132,20 @@ impl Lexer {
 
         if string.is_empty() {
             self.index = index;
-            Err(Error::new(
-                ErrorKind::InvalidSyntax,
-                "a string cannot be empty",
-            ))?
+            Err(Error::new(ErrorKind::InvalidSyntax, "string cannot be empty; a valid string requires at least one alphanumeric or symbol character"))?
         }
 
         if string.parse::<isize>().is_ok() {
             self.index = index;
-            Err(Error::new(
-                ErrorKind::InvalidSyntax,
-                "a number sequence cannot be interpreted as a string",
-            ))?
+            Err(Error::new(ErrorKind::InvalidSyntax, "string cannot contain only numeric characters, as it may be mistaken for a number token"))?;
         }
 
         if RESERVED_KEYWORDS.contains(&string.as_str()) {
             self.index = index;
             Err(Error::new(
                 ErrorKind::InvalidSyntax,
-                "reserved keyword cannot be interpreted as a string",
-            ))?
+                "string cannot be a reserved keyword (e.g., 'true', 'false', 'null')",
+            ))?;
         }
 
         Ok(Token::String(string))
@@ -162,8 +159,10 @@ impl Lexer {
             Some(&RESERVED_CHAR_DOUBLE_QUOTE) => (false, true),
             _ => {
                 self.index = index;
-                Err(Error::new(ErrorKind::InvalidSyntax, 
-                "it cannot be interpreted as a quoted string if it does not begin with a quotation mark"))?
+                Err(Error::new(
+                    ErrorKind::InvalidSyntax,
+                    "a quoted string must start with a single or double quotation mark",
+                ))?
             }
         };
 
@@ -171,9 +170,10 @@ impl Lexer {
             self.advance();
         } else {
             self.index = index;
-            Err(Error::new(ErrorKind::InvalidSyntax, 
-                "it cannot be interpreted as a quoted string if it does not begin with a quotation mark"))?
-            
+            Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "a quoted string must start with a single or double quotation mark",
+            ))?
         }
 
         let string = self.read_while(|c| {
@@ -188,7 +188,10 @@ impl Lexer {
             self.advance();
         } else {
             self.index = index;
-            Err(Error::new(ErrorKind::InvalidSyntax,"a string that starts with a quote must end with a quote"))?
+            Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "quoted string must end with the same quotation mark it started with",
+            ))?
         }
 
         Ok(Token::String(string))
@@ -201,16 +204,20 @@ impl Lexer {
             self.advance();
         } else {
             self.index = index;
-            Err(Error::new(ErrorKind::InvalidSyntax, 
-                "it cannot be interpreted as an identifier if it does not begin with a dollar sign"))?
+            Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "identifier must start with a '$' symbol",
+            ))?
         }
 
         let string = self.read_while(|c| !c.is_whitespace() && !RESERVED_CHARS.contains(&c));
 
         if string.is_empty() {
             self.index = index;
-            Err(Error::new(ErrorKind::InvalidSyntax, 
-                "an identifier cannot be empty"))?
+            Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "identifier cannot be empty after '$'",
+            ))?;
         }
 
         Ok(Token::Identifier(string))
@@ -225,7 +232,10 @@ impl Lexer {
             Ok(n) => Ok(Token::Number(n)),
             Err(_) => {
                 self.index = index;
-                Err(Error::new(ErrorKind::InvalidSyntax,"it could not be interpreted as a number"))?
+                Err(Error::new(
+                    ErrorKind::InvalidSyntax,
+                    "the token cannot be interpreted as a valid number",
+                ))?
             }
         }
     }
@@ -241,7 +251,10 @@ impl Lexer {
             RESERVED_KEYWORD_FALSE => Ok(Token::Boolean(false)),
             _ => {
                 self.index = index;
-                Err(Error::new(ErrorKind::InvalidSyntax,"it could not be interpreted as a boolean"))?
+                Err(Error::new(
+                    ErrorKind::InvalidSyntax,
+                    "expected 'true' or 'false' for boolean token, but found an invalid token",
+                ))?
             }
         }
     }
@@ -253,8 +266,10 @@ impl Lexer {
             self.advance();
         } else {
             self.index = index;
-            Err(Error::new(ErrorKind::InvalidSyntax, 
-                "it cannot be interpreted as a file descriptor if it does not begin with an at sign"))?
+            Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "file descriptor must start with an '@' symbol",
+            ))?
         }
 
         let string = self.read_while(|c| !c.is_whitespace() && !RESERVED_CHARS.contains(&c));
@@ -263,7 +278,10 @@ impl Lexer {
             Ok(n) => Ok(Token::FileDescriptor(n)),
             Err(_) => {
                 self.index = index;
-                Err(Error::new(ErrorKind::InvalidSyntax,"it could not be interpreted as a file descriptor"))?
+                Err(Error::new(
+                    ErrorKind::InvalidSyntax,
+                    "the token following '@' cannot be interpreted as a valid file descriptor",
+                ))?
             }
         }
     }
@@ -333,7 +351,10 @@ impl Lexer {
         if self.index >= self.length {
             return Ok(Token::EOF);
         } else {
-            Err(Error::new(ErrorKind::InvalidSyntax, "invalid token"))?
+            Err(Error::new(
+                ErrorKind::InvalidSyntax,
+                "unrecognized or invalid token encountered",
+            ))?
         }
     }
 }
