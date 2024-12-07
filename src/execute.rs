@@ -22,6 +22,14 @@ use crate::{
     utils::globbing,
 };
 
+/// Executes an assignment statement.
+///
+/// This function evaluates an assignment statement, extracts the variable name and value,
+/// and stores it in the shell variable environment.
+///
+/// # Arguments
+/// - `assignment`: An `Assignment` struct representing the assignment statement.
+/// - `sh_vars`: A mutable reference to the shell variable environment.
 fn execute_assignment(assignment: Assignment, sh_vars: &mut ShVars) -> Result<()> {
     let identifier = match assignment.identifier() {
         Expression::Identifier(identifier) => identifier.to_string(),
@@ -42,6 +50,15 @@ fn execute_assignment(assignment: Assignment, sh_vars: &mut ShVars) -> Result<()
     Ok(())
 }
 
+/// Executes a built-in command.
+///
+/// This function matches the command name with the available built-in commands
+/// (e.g., `cd`, `exit`, `abort`) and performs the associated action.
+///
+/// # Arguments
+/// - `name`: The name of the command to execute.
+/// - `args`: A vector of arguments for the command.
+/// - `state`: A mutable reference to the shell state.
 fn execute_builtin_command(name: &String, args: &Vec<String>, state: &mut State) -> Result<()> {
     match name.as_str() {
         "cd" => {
@@ -67,6 +84,19 @@ fn execute_builtin_command(name: &String, args: &Vec<String>, state: &mut State)
     Ok(())
 }
 
+/// Executes a process command with optional redirections and background handling.
+///
+/// This function spawns a new process using the specified command and arguments.
+/// It handles input/output redirection, environment variable setup, and background execution.
+///
+/// # Arguments
+/// - `name`: The name of the executable.
+/// - `args`: A vector of arguments to pass to the executable.
+/// - `redirects`: A vector of `Redirect` objects defining input/output redirections.
+/// - `is_background`: A boolean indicating if the process should run in the background.
+/// - `state`: A mutable reference to the shell state.
+/// - `sh_vars`: A mutable reference to the shell variable environment.
+/// - `is_last`: A boolean indicating if this is the last command in a pipeline.
 fn execute_process_command(
     name: String,
     args: Vec<String>,
@@ -203,7 +233,17 @@ fn execute_process_command(
     Ok(())
 }
 
-pub fn execute_command(
+/// Executes a command statement, either built-in or as an external process.
+///
+/// This function first attempts to execute the command as a built-in. If the command
+/// is not recognized as a built-in, it falls back to executing it as an external process.
+///
+/// # Arguments
+/// - `command`: A `Command` struct representing the command to execute.
+/// - `state`: A mutable reference to the shell state.
+/// - `sh_vars`: A mutable reference to the shell variable environment.
+/// - `is_last`: A boolean indicating if this is the last command in a pipeline.
+fn execute_command(
     command: Command,
     state: &mut State,
     sh_vars: &mut ShVars,
@@ -269,6 +309,15 @@ pub fn execute_command(
     })
 }
 
+/// Executes a shell abstract syntax tree (AST).
+///
+/// This function traverses the AST and executes its nodes, which may include blocks,
+/// statements, commands, and pipelines. Each node is evaluated in sequence.
+///
+/// # Arguments
+/// - `ast`: A `Node` representing the root of the AST.
+/// - `state`: A mutable reference to the shell state.
+/// - `sh_vars`: A mutable reference to the shell variable environment.
 pub fn execute(ast: Node, state: &mut State, sh_vars: &mut ShVars) -> Result<()> {
     match ast {
         Node::Block(mut block) => {
