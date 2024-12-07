@@ -57,6 +57,10 @@ const RESERVED_CHARS: [char; 10] = [
     RESERVED_CHAR_DOUBLE_QUOTE,
 ];
 
+/// Lexer for tokenizing source strings into syntactic tokens.
+///
+/// This struct maintains the state of the lexing process, including the source content,
+/// its length, and the current parsing index.
 #[derive(Debug)]
 pub struct Lexer {
     source: Vec<char>,
@@ -65,6 +69,13 @@ pub struct Lexer {
 }
 
 impl Lexer {
+    /// Creates a new lexer from the given source string.
+    ///
+    /// # Arguments
+    /// - `source`: The input source string to tokenize.
+    ///
+    /// # Returns
+    /// - A `Lexer` instance initialized with the provided source.
     pub fn new(source: impl Into<String>) -> Self {
         let source = source.into().chars().collect::<Vec<char>>();
 
@@ -79,14 +90,29 @@ impl Lexer {
         }
     }
 
+    /// Returns the current character the lexer is processing, if any.
+    ///
+    /// # Returns
+    /// - `Some(&char)`: A reference to the current character.
+    /// - `None`: If the lexer has reached the end of the source.
     fn current(&self) -> Option<&char> {
         self.source.get(self.index)
     }
 
+    /// Advances the lexer to the next character.
+    ///
+    /// This method increments the current index and skips to the next character in the source.
     fn advance(&mut self) {
         self.index += 1;
     }
 
+    /// Reads characters from the source while the given condition is true.
+    ///
+    /// # Arguments
+    /// - `condition`: A closure that returns `true` for characters to include.
+    ///
+    /// # Returns
+    /// - A `String` containing all characters read from the source.
     fn read_while<F>(&mut self, mut condition: F) -> String
     where
         F: FnMut(char) -> bool,
@@ -108,6 +134,12 @@ impl Lexer {
             .collect()
     }
 
+    /// Reads a `null` keyword token from the source.
+    ///
+    /// This function ensures the token matches the reserved `null` keyword.
+    ///
+    /// # Errors
+    /// - Returns `ErrorKind::InvalidSyntax` if the token does not match `null`.
     fn read_null_token(&mut self) -> Result<Token> {
         let index = self.index;
 
@@ -123,6 +155,12 @@ impl Lexer {
         }
     }
 
+    /// Reads a string token from the source.
+    ///
+    /// The token must not be a reserved keyword, numeric, or empty.
+    ///
+    /// # Errors
+    /// - Returns `ErrorKind::InvalidSyntax` if the string is invalid or conflicts with rules.
     fn read_string_token(&mut self) -> Result<Token> {
         let index = self.index;
 
@@ -151,6 +189,12 @@ impl Lexer {
         Ok(Token::String(string))
     }
 
+    /// Reads a quoted string token from the source.
+    ///
+    /// The token must begin and end with matching single or double quotes.
+    ///
+    /// # Errors
+    /// - Returns `ErrorKind::InvalidSyntax` if the quotes are mismatched or missing.
     fn read_quoted_string_token(&mut self) -> Result<Token> {
         let index = self.index;
 
@@ -197,6 +241,12 @@ impl Lexer {
         Ok(Token::String(string))
     }
 
+    /// Reads an identifier token from the source.
+    ///
+    /// Identifiers must begin with a `$` symbol and contain valid characters.
+    ///
+    /// # Errors
+    /// - Returns `ErrorKind::InvalidSyntax` if the identifier is invalid.
     fn read_identifier_token(&mut self) -> Result<Token> {
         let index = self.index;
 
@@ -223,6 +273,12 @@ impl Lexer {
         Ok(Token::Identifier(string))
     }
 
+    /// Reads a number token from the source.
+    ///
+    /// The token must consist of numeric characters and be convertible to an integer.
+    ///
+    /// # Errors
+    /// - Returns `ErrorKind::InvalidSyntax` if the token is not a valid number.
     fn read_number_token(&mut self) -> Result<Token> {
         let index = self.index;
 
@@ -240,6 +296,12 @@ impl Lexer {
         }
     }
 
+    /// Reads a boolean token from the source.
+    ///
+    /// The token must match either `true` or `false`.
+    ///
+    /// # Errors
+    /// - Returns `ErrorKind::InvalidSyntax` if the token is not a valid boolean.
     fn read_boolean_token(&mut self) -> Result<Token> {
         let index = self.index;
 
@@ -259,6 +321,12 @@ impl Lexer {
         }
     }
 
+    /// Reads a file descriptor token from the source.
+    ///
+    /// The token must begin with an `@` symbol followed by a valid integer.
+    ///
+    /// # Errors
+    /// - Returns `ErrorKind::InvalidSyntax` if the token is invalid.
     fn read_filedescriptor_token(&mut self) -> Result<Token> {
         let index = self.index;
 
@@ -286,6 +354,17 @@ impl Lexer {
         }
     }
 
+    /// Reads the next token from the source.
+    ///
+    /// This method processes the current character, determines its type, and
+    /// generates the appropriate token. It skips whitespace and handles errors.
+    ///
+    /// # Returns
+    /// - A `Token` representing the next syntactic element in the source.
+    /// - Returns `Token::EOF` when the end of the source is reached.
+    ///
+    /// # Errors
+    /// - Returns `ErrorKind::InvalidSyntax` if an unrecognized or invalid token is encountered.ƒ
     pub fn next(&mut self) -> Result<Token> {
         while let Some(&c) = self.current() {
             if c.is_whitespace() {
