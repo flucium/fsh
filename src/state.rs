@@ -1,6 +1,17 @@
 use crate::{pipe::Pipe, process_handler::ProcessHandler};
 use std::path::{Path, PathBuf};
 
+/// Represents the current state of the shell or interpreter.
+///
+/// The `State` struct manages the following components:
+/// - Process handling via `ProcessHandler`.
+/// - Pipe management via `Pipe`.
+/// - Tracking of the current working directory.
+// -----
+// # Fields
+// - `handler`: Manages processes in the current state.
+// - `pipe`: Manages inter-process communication pipes.
+// - `current_dir`: Tracks the current working directory as a `PathBuf`.
 pub struct State {
     handler: ProcessHandler,
     pipe: Pipe,
@@ -8,6 +19,7 @@ pub struct State {
 }
 
 impl State {
+    /// Creates a new `State` with default values.
     pub fn new() -> Self {
         Self {
             handler: ProcessHandler::new(),
@@ -16,26 +28,50 @@ impl State {
         }
     }
 
+    /// Provides an immutable reference to the `ProcessHandler`.
+    ///
+    /// # Returns
+    /// - A reference to the `ProcessHandler` for managing processes.
     pub fn handler(&self) -> &ProcessHandler {
         &self.handler
     }
 
+    /// Provides a mutable reference to the `ProcessHandler`.
+    ///
+    /// # Returns
+    /// - A mutable reference to the `ProcessHandler` for managing processes.
     pub fn handler_mut(&mut self) -> &mut ProcessHandler {
         &mut self.handler
     }
 
+    /// Provides an immutable reference to the `Pipe`.
+    ///
+    /// # Returns
+    /// - A reference to the `Pipe` for inter-process communication.
     pub fn pipe(&self) -> &Pipe {
         &self.pipe
     }
 
+    /// Provides a mutable reference to the `Pipe`.
+    ///
+    /// # Returns
+    /// - A mutable reference to the `Pipe` for inter-process communication.
     pub fn pipe_mut(&mut self) -> &mut Pipe {
         &mut self.pipe
     }
 
+    /// Provides an immutable reference to the current working directory.
+    ///
+    /// # Returns
+    /// - A reference to the `Path` representing the current working directory.
     pub fn current_dir(&self) -> &Path {
         &self.current_dir
     }
 
+    /// Provides a mutable reference to the current working directory.
+    ///
+    /// # Returns
+    /// - A mutable reference to the `PathBuf` representing the current working directory.
     pub fn current_dir_mut(&mut self) -> &mut PathBuf {
         &mut self.current_dir
     }
