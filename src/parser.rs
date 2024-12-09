@@ -8,6 +8,17 @@ use crate::{
     utils::recursion_split,
 };
 
+/// Parses a source string into an abstract syntax tree (AST).
+///
+/// The `Parser` struct provides functionality to tokenize and parse a source string
+/// into a structured representation. It supports parsing assignments, commands,
+/// pipes, and blocks.
+// -----
+// # Fields
+// - `lexer`: A `Lexer` instance for tokenizing the input.
+// - `tokens`: A vector of tokens collected during parsing.
+// - `index`: The current position in the token list.
+// - `length`: The total number of tokens in the current batch.
 pub struct Parser {
     lexer: Lexer,
     tokens: Vec<Token>,
@@ -16,6 +27,13 @@ pub struct Parser {
 }
 
 impl Parser {
+    /// Creates a new `Parser` from the given source string.
+    ///
+    /// # Arguments
+    /// - `source`: The input source string to parse.
+    ///
+    /// # Returns
+    /// - A `Parser` instance initialized with the provided source.s
     pub fn new(source: impl Into<String>) -> Self {
         Self {
             lexer: Lexer::new(preprocess(source)),
@@ -25,6 +43,13 @@ impl Parser {
         }
     }
 
+    /// Collects tokens from the lexer until a semicolon (`;`), ampersand (`&`), or EOF is reached.
+    ///
+    /// This method clears the current token list and refills it with the next batch
+    /// of tokens from the lexer.
+    ///
+    /// # Errors
+    /// - Returns an error if tokenization fails.
     fn collect(&mut self) -> Result<()> {
         self.tokens.clear();
 
@@ -49,6 +74,15 @@ impl Parser {
         Ok(())
     }
 
+    /// Parses an assignment statement from the collected tokens.
+    ///
+    /// The assignment must follow the format `IDENTIFIER = VALUE`.
+    ///
+    /// # Returns
+    /// - An `Assignment` struct representing the parsed assignment.
+    ///
+    /// # Errors
+    /// - Returns an error if the token sequence does not match the expected format.
     fn parse_assignment(&mut self) -> Result<Assignment> {
         let tokens = self
             .tokens
@@ -63,6 +97,15 @@ impl Parser {
         Ok(assignment)
     }
 
+    /// Parses a command statement from the collected tokens.
+    ///
+    /// A command consists of a name, optional arguments, and optional redirections.
+    ///
+    /// # Returns
+    /// - A `Command` struct representing the parsed command.
+    ///
+    /// # Errors
+    /// - Returns an error if the token sequence does not match a valid command format.
     fn parse_command(&mut self) -> Result<Command> {
         let tokens = self
             .tokens
@@ -76,6 +119,15 @@ impl Parser {
         Ok(command)
     }
 
+    /// Parses a pipe from the collected tokens.
+    ///
+    /// A pipe connects multiple commands using the pipe operator (`|`).
+    ///
+    /// # Returns
+    /// - A `Pipe` struct representing the parsed pipe.
+    ///
+    /// # Errors
+    /// - Returns an error if the token sequence does not match a valid pipe format.s
     fn parse_pipe(&mut self) -> Result<Pipe> {
         let tokens = self
             .tokens
@@ -89,6 +141,17 @@ impl Parser {
         Ok(pipe)
     }
 
+    /// Parses the input into an abstract syntax tree (AST).
+    ///
+    /// This method repeatedly collects tokens and parses them into nodes, which
+    /// are added to a `Block`. The parsing process continues until all tokens are
+    /// consumed.
+    ///
+    /// # Returns
+    /// - A `Node` representing the root of the parsed AST.
+    ///
+    /// # Errors
+    /// - Returns an error if any parsing step fails.
     pub fn parse(&mut self) -> Result<Node> {
         let mut block = Block::new();
 
@@ -119,10 +182,24 @@ impl Parser {
     }
 }
 
+/// Provides lightweight parsing utilities for individual constructs.
+///
+/// The `lite_parser` module contains helper functions for parsing specific
+/// tokens or constructs, such as expressions, assignments, and commands.
 pub mod lite_parser {
 
     use super::*;
 
+    /// Parses a null token into an expression.
+    ///
+    /// # Arguments
+    /// - `token`: The token to parse.
+    ///
+    /// # Returns
+    /// - An `Expression::Null` if the token represents a null value.
+    ///
+    /// # Errors
+    /// - Returns an error if the token is not a valid null token.
     pub fn parse_null(token: &Token) -> Result<Expression> {
         match token {
             Token::Null => Ok(Expression::Null),
@@ -133,6 +210,16 @@ pub mod lite_parser {
         }
     }
 
+    /// Parses a string token into an expression.
+    ///
+    /// # Arguments
+    /// - `token`: The token to parse.
+    ///
+    /// # Returns
+    /// - An `Expression::String` if the token represents a string value.
+    ///
+    /// # Errors
+    /// - Returns an error if the token is not a valid string token.
     pub fn parse_string(token: &Token) -> Result<Expression> {
         match token {
             Token::String(s) => Ok(Expression::String(s.clone())),
@@ -143,6 +230,16 @@ pub mod lite_parser {
         }
     }
 
+    /// Parses an identifier token into an expression.
+    ///
+    /// # Arguments
+    /// - `token`: The token to parse.
+    ///
+    /// # Returns
+    /// - An `Expression::Identifier` if the token represents an identifier.
+    ///
+    /// # Errors
+    /// - Returns an error if the token is not a valid identifier token.
     pub fn parse_identifier(token: &Token) -> Result<Expression> {
         match token {
             Token::Identifier(s) => Ok(Expression::Identifier(s.clone())),
@@ -153,6 +250,16 @@ pub mod lite_parser {
         }
     }
 
+    /// Parses a boolean token into an expression.
+    ///
+    /// # Arguments
+    /// - `token`: The token to parse.
+    ///
+    /// # Returns
+    /// - An `Expression::Boolean` if the token represents a boolean value.
+    ///
+    /// # Errors
+    /// - Returns an error if the token is not a valid boolean token.
     pub fn parse_boolean(token: &Token) -> Result<Expression> {
         match token {
             Token::Boolean(b) => Ok(Expression::Boolean(*b)),
@@ -163,6 +270,16 @@ pub mod lite_parser {
         }
     }
 
+    /// Parses a number token into an expression.
+    ///
+    /// # Arguments
+    /// - `token`: The token to parse.
+    ///
+    /// # Returns
+    /// - An `Expression::Number` if the token represents a number.
+    ///
+    /// # Errors
+    /// - Returns an error if the token is not a valid number token.
     pub fn parse_number(token: &Token) -> Result<Expression> {
         match token {
             Token::Number(n) => Ok(Expression::Number(*n)),
@@ -173,6 +290,16 @@ pub mod lite_parser {
         }
     }
 
+    /// Parses a file descriptor token into an expression.
+    ///
+    /// # Arguments
+    /// - `token`: The token to parse.
+    ///
+    /// # Returns
+    /// - An `Expression::FileDescriptor` if the token represents a file descriptor.
+    ///
+    /// # Errors
+    /// - Returns an error if the token is not a valid file descriptor token.
     pub fn parse_file_descriptor(token: &Token) -> Result<Expression> {
         match token {
             Token::FileDescriptor(n) => Ok(Expression::FileDescriptor(*n)),
@@ -183,6 +310,16 @@ pub mod lite_parser {
         }
     }
 
+    /// Parses an assignment from a sequence of tokens.
+    ///
+    /// # Arguments
+    /// - `tokens`: A slice of tokens representing the assignment.
+    ///
+    /// # Returns
+    /// - An `Assignment` struct representing the parsed assignment.
+    ///
+    /// # Errors
+    /// - Returns an error if the token sequence is not a valid assignment.
     pub fn parse_assignment(tokens: &[Token; 3]) -> Result<Assignment> {
         if tokens[1] != Token::Equal {
             Err(Error::new(
@@ -208,6 +345,20 @@ pub mod lite_parser {
         Ok(Assignment::new(identifier, value))
     }
 
+    /// Parses an abbreviated redirect from two tokens.
+    ///
+    /// An abbreviated redirect assumes the format:
+    /// - `>` or `<` (operator)
+    /// - Right-hand side (e.g., file name, identifier, or file descriptor)
+    ///
+    /// # Arguments
+    /// - `tokens`: A slice of exactly two tokens representing the redirect.
+    ///
+    /// # Returns
+    /// - A `Redirect` struct representing the parsed redirect.
+    ///
+    /// # Errors
+    /// - Returns an error if the tokens do not match the expected format.
     fn parse_abbreviated_redirect(tokens: &[Token; 2]) -> Result<Redirect> {
         let (left, operator) = match tokens[0] {
             Token::GreaterThan => (Expression::FileDescriptor(1), RedirectOperator::GreaterThan),
@@ -234,6 +385,21 @@ pub mod lite_parser {
         Ok(Redirect::new(operator, left, right))
     }
 
+    /// Parses a normal redirect from three tokens.
+    ///
+    /// A normal redirect assumes the format:
+    /// - Left-hand side (e.g., file descriptor)
+    /// - `>` or `<` (operator)
+    /// - Right-hand side (e.g., file name, identifier, or file descriptor)
+    ///
+    /// # Arguments
+    /// - `tokens`: A slice of exactly three tokens representing the redirect.
+    ///
+    /// # Returns
+    /// - A `Redirect` struct representing the parsed redirect.
+    ///
+    /// # Errors
+    /// - Returns an error if the tokens do not match the expected format.
     fn parse_normal_redirect(tokens: &[Token; 3]) -> Result<Redirect> {
         let operator = match tokens[1] {
             Token::GreaterThan => RedirectOperator::GreaterThan,
@@ -267,6 +433,18 @@ pub mod lite_parser {
         Ok(Redirect::new(operator, left, right))
     }
 
+    /// Parses a redirect from a sequence of tokens.
+    ///
+    /// The redirect can be either abbreviated (2 tokens) or normal (3 tokens).
+    ///
+    /// # Arguments
+    /// - `tokens`: A slice of tokens representing the redirect.
+    ///
+    /// # Returns
+    /// - A `Redirect` struct representing the parsed redirect.
+    ///
+    /// # Errors
+    /// - Returns an error if the tokens do not match either the abbreviated or normal format.
     pub fn parse_redirect(tokens: &[Token]) -> Result<Redirect> {
         match tokens.len() {
             2 => parse_abbreviated_redirect(tokens.try_into().unwrap()),
@@ -275,6 +453,18 @@ pub mod lite_parser {
         }
     }
 
+    /// Parses a command name from a token.
+    ///
+    /// The command name must be a valid string, identifier, or number.
+    ///
+    /// # Arguments
+    /// - `token`: The token to parse.
+    ///
+    /// # Returns
+    /// - An `Expression` representing the command name.
+    ///
+    /// # Errors
+    /// - Returns an error if the token is not a valid command name.
     fn parse_command_name(token: &Token) -> Result<Expression> {
         parse_string(token)
             .or(parse_identifier(token).or(parse_number(token)))
@@ -286,6 +476,22 @@ pub mod lite_parser {
             })
     }
 
+    /// Parses the arguments and redirects for a command.
+    ///
+    /// This function extracts command arguments, I/O redirects, and background execution
+    /// markers from the tokens following a command name.
+    ///
+    /// # Arguments
+    /// - `tokens`: A slice of tokens representing the command arguments and redirects.
+    ///
+    /// # Returns
+    /// - A tuple containing:
+    ///   - `Vec<Expression>`: The list of command arguments.
+    ///   - `Vec<Redirect>`: The list of redirects.
+    ///   - `Expression`: A boolean indicating whether the command should run in the background.
+    ///
+    /// # Errors
+    /// - Returns an error if any token is invalid or improperly positioned.
     fn parse_command_arguments(
         tokens: &[Token],
     ) -> Result<(Vec<Expression>, Vec<Redirect>, Expression)> {
@@ -345,6 +551,21 @@ pub mod lite_parser {
         Ok((arguments, redirects, is_background))
     }
 
+    /// Parses a command from a sequence of tokens.
+    ///
+    /// A command consists of:
+    /// - A name (e.g., an identifier or string).
+    /// - Zero or more arguments and redirects.
+    /// - An optional background execution marker (`&`).
+    ///
+    /// # Arguments
+    /// - `tokens`: A slice of tokens representing the command.
+    ///
+    /// # Returns
+    /// - A `Command` struct representing the parsed command.
+    ///
+    /// # Errors
+    /// - Returns an error if the tokens do not match the expected command format.
     pub fn parse_command(tokens: &[Token]) -> Result<Command> {
         let name = parse_command_name(&tokens[0])?;
 
@@ -353,6 +574,19 @@ pub mod lite_parser {
         Ok(Command::new(name, arguments, redirects, is_background))
     }
 
+    /// Parses a pipe from a sequence of tokens.
+    ///
+    /// A pipe connects multiple commands using the pipe operator (`|`).
+    /// Each segment of the pipe is parsed as an individual command.
+    ///
+    /// # Arguments
+    /// - `tokens`: A slice of tokens representing the pipe.
+    ///
+    /// # Returns
+    /// - A `Pipe` struct representing the parsed pipe.
+    ///
+    /// # Errors
+    /// - Returns an error if the tokens do not form a valid pipe structure.
     pub fn parse_pipe(tokens: &[Token]) -> Result<Pipe> {
         if tokens.len() < 3 {
             Err(Error::new(
