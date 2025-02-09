@@ -80,10 +80,7 @@ impl Pipe {
             if fd >= 0 {
                 unsafe { libc::close(fd) };
             } else {
-                Err(Error::new(
-                    ErrorKind::InvalidFileDescriptor,
-                    "invalid file descriptor",
-                ))?
+                Err(Error::new(ErrorKind::InvalidFileDescriptor, ""))?
             }
         }
 
@@ -129,10 +126,7 @@ impl Pipe {
     /// - `Err(Error)`: If the pipe is not in the sendable state or another error occurs.
     pub fn send(&mut self, fd: RawFd) -> Result<()> {
         if self.fd.is_some() {
-            Err(Error::new(
-                ErrorKind::PipeUnavailable,
-                "pipe already has a file descriptor set",
-            ))?
+            Err(Error::new(ErrorKind::PipeUnavailable, ""))?
         }
 
         match self.state {
@@ -142,14 +136,8 @@ impl Pipe {
                 Ok(())
             }
 
-            PipeState::Closed => Err(Error::new(
-                ErrorKind::PipeUnavailable,
-                "cannot send on a closed pipe",
-            )),
-            PipeState::Recvable => Err(Error::new(
-                ErrorKind::InvalidPipeState,
-                "pipe is in receive state, cannot send",
-            )),
+            PipeState::Closed => Err(Error::new(ErrorKind::PipeUnavailable, "")),
+            PipeState::Recvable => Err(Error::new(ErrorKind::InvalidPipeState, "")),
         }
     }
 
@@ -160,10 +148,7 @@ impl Pipe {
     /// - `Err(Error)`: If the pipe is not in the receivable state or another error occurs.
     pub fn recv(&mut self) -> Result<RawFd> {
         if self.fd.is_none() {
-            Err(Error::new(
-                ErrorKind::PipeUnavailable,
-                "no file descriptor available to receive",
-            ))?
+            Err(Error::new(ErrorKind::PipeUnavailable, ""))?
         }
 
         match self.state {
@@ -171,10 +156,7 @@ impl Pipe {
                 let fd = self.fd.unwrap_or(-1);
 
                 if fd < 0 {
-                    Err(Error::new(
-                        ErrorKind::InvalidFileDescriptor,
-                        "received an invalid file descriptor",
-                    ))?
+                    Err(Error::new(ErrorKind::InvalidFileDescriptor, ""))?
                 }
 
                 self.state = PipeState::Sendable;
@@ -183,14 +165,8 @@ impl Pipe {
                 Ok(fd)
             }
 
-            PipeState::Closed => Err(Error::new(
-                ErrorKind::PipeUnavailable,
-                "cannot receive from a closed pipe",
-            )),
-            PipeState::Sendable => Err(Error::new(
-                ErrorKind::InvalidPipeState,
-                "pipe is in sendable state, cannot receive",
-            )),
+            PipeState::Closed => Err(Error::new(ErrorKind::PipeUnavailable, "")),
+            PipeState::Sendable => Err(Error::new(ErrorKind::InvalidPipeState, "")),
         }
     }
 }
