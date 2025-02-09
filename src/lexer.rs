@@ -106,7 +106,7 @@ impl Lexer {
             _ => {
                 self.index = start_index;
 
-                Err(Error::new(ErrorKind::InvalidSyntax, "invalid keyword"))
+                Err(Error::new(ErrorKind::InvalidSyntax, ""))
             }
         }
     }
@@ -131,7 +131,7 @@ impl Lexer {
         {
             self.index = start_index;
 
-            Err(Error::new(ErrorKind::InvalidSyntax, "invalid string token"))?
+            Err(Error::new(ErrorKind::InvalidSyntax, ""))?
         }
 
         Ok(Token::String(string))
@@ -150,10 +150,10 @@ impl Lexer {
 
         let quote = self
             .current()
-            .ok_or_else(|| Error::new(ErrorKind::InvalidSyntax, "missing quote"))?;
+            .ok_or_else(|| Error::new(ErrorKind::InvalidSyntax, ""))?;
 
         if quote != '\'' && quote != '"' {
-            Err(Error::new(ErrorKind::InvalidSyntax, "expected a quote"))?
+            Err(Error::new(ErrorKind::InvalidSyntax, ""))?
         }
 
         self.advance();
@@ -163,7 +163,7 @@ impl Lexer {
         if self.current() != Some(quote) {
             self.index = start_index;
 
-            Err(Error::new(ErrorKind::InvalidSyntax, "mismatched quote"))?
+            Err(Error::new(ErrorKind::InvalidSyntax, ""))?
         }
 
         self.advance();
@@ -183,7 +183,7 @@ impl Lexer {
         let start_index = self.index;
 
         if self.current() != Some('$') {
-            Err(Error::new(ErrorKind::InvalidSyntax, "expected '$'"))?
+            Err(Error::new(ErrorKind::InvalidSyntax, ""))?
         }
 
         self.advance();
@@ -193,7 +193,7 @@ impl Lexer {
         if identifier.is_empty() {
             self.index = start_index;
 
-            Err(Error::new(ErrorKind::InvalidSyntax, "empty identifier"))?
+            Err(Error::new(ErrorKind::InvalidSyntax, ""))?
         }
 
         Ok(Token::Identifier(identifier))
@@ -214,7 +214,7 @@ impl Lexer {
 
         string.parse::<isize>().map(Token::Number).map_err(|_| {
             self.index = start_index;
-            Error::new(ErrorKind::InvalidSyntax, "invalid number")
+            Error::new(ErrorKind::InvalidSyntax, "")
         })
     }
 
@@ -229,7 +229,7 @@ impl Lexer {
         let start_index = self.index;
 
         if self.current() != Some('@') {
-            Err(Error::new(ErrorKind::InvalidSyntax, "expected '@'"))?
+            Err(Error::new(ErrorKind::InvalidSyntax, ""))?
         }
 
         self.advance();
@@ -242,7 +242,7 @@ impl Lexer {
             .map_err(|_| {
                 self.index = start_index;
 
-                Error::new(ErrorKind::InvalidSyntax, "invalid file descriptor")
+                Error::new(ErrorKind::InvalidSyntax, "")
             })
     }
 
