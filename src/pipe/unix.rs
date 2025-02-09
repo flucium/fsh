@@ -1,4 +1,7 @@
-use crate::{error::Error, result::Result};
+use crate::{
+    error::{Error, ErrorKind},
+    result::Result,
+};
 use std::os::unix::io::RawFd;
 
 /// Represents the state of a pipe.
@@ -77,7 +80,10 @@ impl Pipe {
             if fd >= 0 {
                 unsafe { libc::close(fd) };
             } else {
-                Err(Error::NOT_IMPLEMENTED)?
+                Err(Error::new(
+                    ErrorKind::InvalidFileDescriptor,
+                    "invalid file descriptor",
+                ))?
             }
         }
 
@@ -123,7 +129,10 @@ impl Pipe {
     /// - `Err(Error)`: If the pipe is not in the sendable state or another error occurs.
     pub fn send(&mut self, fd: RawFd) -> Result<()> {
         if self.fd.is_some() {
-            Err(Error::NOT_IMPLEMENTED)?
+            Err(Error::new(
+                ErrorKind::PipeUnavailable,
+                "pipe already has a file descriptor set",
+            ))?
         }
 
         match self.state {
@@ -133,9 +142,14 @@ impl Pipe {
                 Ok(())
             }
 
-            PipeState::Closed => Err(Error::NOT_IMPLEMENTED),
-
-            PipeState::Recvable => Err(Error::NOT_IMPLEMENTED),
+            PipeState::Closed => Err(Error::new(
+                ErrorKind::PipeUnavailable,
+                "cannot send on a closed pipe",
+            )),
+            PipeState::Recvable => Err(Error::new(
+                ErrorKind::InvalidPipeState,
+                "pipe is in receive state, cannot send",
+            )),
         }
     }
 
@@ -146,7 +160,10 @@ impl Pipe {
     /// - `Err(Error)`: If the pipe is not in the receivable state or another error occurs.
     pub fn recv(&mut self) -> Result<RawFd> {
         if self.fd.is_none() {
-            Err(Error::NOT_IMPLEMENTED)?
+            Err(Error::new(
+                ErrorKind::PipeUnavailable,
+                "no file descriptor available to receive",
+            ))?
         }
 
         match self.state {
@@ -154,7 +171,10 @@ impl Pipe {
                 let fd = self.fd.unwrap_or(-1);
 
                 if fd < 0 {
-                    Err(Error::NOT_IMPLEMENTED)?
+                    Err(Error::new(
+                        ErrorKind::InvalidFileDescriptor,
+                        "received an invalid file descriptor",
+                    ))?
                 }
 
                 self.state = PipeState::Sendable;
@@ -163,14 +183,19 @@ impl Pipe {
                 Ok(fd)
             }
 
-            PipeState::Closed => Err(Error::NOT_IMPLEMENTED)?,
-
-            PipeState::Sendable => Err(Error::NOT_IMPLEMENTED)?,
+            PipeState::Closed => Err(Error::new(
+                ErrorKind::PipeUnavailable,
+                "cannot receive from a closed pipe",
+            )),
+            PipeState::Sendable => Err(Error::new(
+                ErrorKind::InvalidPipeState,
+                "pipe is in sendable state, cannot receive",
+            )),
         }
     }
 }
 
-impl Drop for Pipe{
+impl Drop for Pipe {
     fn drop(&mut self) {
         self.state = PipeState::Closed;
         self.fd = None;
