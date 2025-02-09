@@ -1,4 +1,7 @@
-use crate::{error::Error, result::Result};
+use crate::{
+    error::{Error, ErrorKind},
+    result::Result,
+};
 use std::{mem::ManuallyDrop, process};
 
 /// Manages a collection of processes for handling foreground and background tasks.
@@ -96,7 +99,7 @@ impl ProcessHandler {
             .0
             .iter()
             .position(|(ps, _)| ps.id() == pid)
-            .ok_or_else(|| Error::NOT_IMPLEMENTED)?;
+            .ok_or_else(|| Error::new(ErrorKind::NotFound, ""))?;
 
         unsafe {
             ManuallyDrop::drop(&mut self.0.remove(index).0);
@@ -146,7 +149,7 @@ impl ProcessHandler {
                     ManuallyDrop::drop(ps);
                 }
 
-                kill.map_err(|_| Error::NOT_IMPLEMENTED)?;
+                kill.map_err(|_| Error::new(ErrorKind::Internal, ""))?;
             }
 
             Ok(())
