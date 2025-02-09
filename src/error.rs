@@ -1,4 +1,3 @@
-
 /// Represents an error in the system.
 ///
 /// The `Error` struct contains information about an error, including its kind
@@ -63,10 +62,12 @@ pub enum ErrorKind {
     InvalidSyntax,
     PermissionDenied,
     NotFound,
-
-    // PipeUnavailable,
-    // PipeBroken,
-    // InvalidPipeState,
+    NotAFile,
+    NotADirectory,
+    InvalidPath,
+    PipeUnavailable,
+    PipeBroken,
+    InvalidPipeState,
 }
 
 impl ErrorKind {
@@ -78,9 +79,12 @@ impl ErrorKind {
             Self::InvalidSyntax => "invalid syntax",
             Self::PermissionDenied => "permission denied",
             Self::NotFound => "not found",
-            // Self::PipeUnavailable => "pipe unavailable",
-            // Self::PipeBroken => "pipe broken",
-            // Self::InvalidPipeState => "invalid pipe state",
+            Self::NotAFile => "not a file",
+            Self::NotADirectory => "not a directory",
+            Self::InvalidPath => "invalid path",
+            Self::PipeUnavailable => "pipe unavailable",
+            Self::PipeBroken => "pipe broken",
+            Self::InvalidPipeState => "invalid pipe state",
         }
     }
 }
@@ -94,9 +98,12 @@ impl ToString for ErrorKind {
             Self::InvalidSyntax => String::from("invalid syntax"),
             Self::PermissionDenied => String::from("permission denied"),
             Self::NotFound => String::from("not found"),
-            // Self::PipeUnavailable => String::from("pipe unavailable"),
-            // Self::PipeBroken => String::from("pipe broken"),
-            // Self::InvalidPipeState => String::from("invalid pipe state"),
+            Self::NotAFile => String::from("not a file"),
+            Self::NotADirectory => String::from("not a directory"),
+            Self::InvalidPath => String::from("invalid path"),
+            Self::PipeUnavailable => String::from("pipe unavailable"),
+            Self::PipeBroken => String::from("pipe broken"),
+            Self::InvalidPipeState => String::from("invalid pipe state"),
         }
     }
 }
