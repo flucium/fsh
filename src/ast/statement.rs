@@ -289,6 +289,18 @@ impl Pipe {
     pub fn pop_front(&mut self) -> Option<Command> {
         self.0.pop_front()
     }
+
+    /// Checks if the pipeline is empty.
+    ///
+    /// This function returns `true` if there are no commands in the pipeline,
+    /// and `false` otherwise.
+    /// 
+    /// # Returns
+    /// - `true`: If the pipeline contains no commands.
+    /// - `false`: If the pipeline contains at least one command.
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
 }
 
 impl FshAst for Pipe {
