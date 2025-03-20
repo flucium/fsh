@@ -118,7 +118,7 @@ impl FshAst for Assignment {
 }
 
 /// Represents redirection operators ('<' and '>').
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum RedirectOperator {
     /// <
     LessThan,
@@ -140,7 +140,7 @@ impl FshAst for RedirectOperator {
 /// Represents a redirection operation in the Fsh AST.
 ///
 /// A `Redirect` consists of an operator (`>` or `<`), a left-hand expression, and a right-hand expression.
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Redirect {
     operator: RedirectOperator,
     left: Expression,

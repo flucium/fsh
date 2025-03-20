@@ -5,7 +5,7 @@ use serde::Serialize;
 ///
 /// The `Expression` enum defines various types of expressions that can appear
 /// in the abstract syntax tree (AST).
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug,Clone, PartialEq, Serialize)]
 pub enum Expression {
     /// Represents a null value.
     Null,
