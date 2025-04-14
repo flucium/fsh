@@ -17,6 +17,20 @@ use std::{
 
 use std::os::unix::process::CommandExt;
 
+/// Executes an assignment by updating the shell variables.
+///
+/// This function takes an `Assignment` and evaluates its identifier and value.
+/// If the identifier is valid and the value is a supported expression type,
+/// the key-value pair is inserted into the provided `ShVars` instance.
+///
+/// # Arguments
+/// - `assignment`: The `Assignment` to be executed.
+/// - `sh_vars`: A mutable reference to the shell variable store.
+///
+/// # Returns
+/// - `Ok(())`: If the assignment is valid and successfully applied.
+/// - `Err(Error::NOT_IMPLEMENTED)`: If the identifier is not an `Expression::Identifier`
+///   or the value is of an unsupported expression type.
 fn execute_assignment(assignment: Assignment, sh_vars: &mut ShVars) -> Result<()> {
     let identifier = match assignment.identifier() {
         Expression::Identifier(identifier) => identifier.to_string(),
@@ -37,6 +51,22 @@ fn execute_assignment(assignment: Assignment, sh_vars: &mut ShVars) -> Result<()
     Ok(())
 }
 
+/// Executes a built-in shell command.
+///
+/// This function matches the given command name against supported built-in commands
+/// and executes the corresponding operation. Supported commands include:
+/// - `cd`: Changes the current working directory.
+/// - `abort`: Aborts the process immediately.
+/// - `exit`: Exits the process with the specified exit code.
+///
+/// # Arguments
+/// - `name`: The name of the built-in command.
+/// - `args`: A vector of string arguments passed to the command.
+/// - `state`: A mutable reference to the shell state, used for operations like changing directories.
+///
+/// # Returns
+/// - `Ok(())`: If the command is executed successfully.
+/// - `Err(Error::NOT_IMPLEMENTED)`: If the command is not a supported built-in.
 fn execute_builtin_command(name: &String, args: &Vec<String>, state: &mut State) -> Result<()> {
     match name.as_str() {
         "cd" => {
@@ -65,6 +95,26 @@ fn execute_builtin_command(name: &String, args: &Vec<String>, state: &mut State)
     Ok(())
 }
 
+/// Executes an external process command.
+///
+/// This function constructs and configures a new `std::process::Command`
+/// using the provided name, arguments, redirections, and execution context.
+/// It handles standard I/O setup (including pipe redirection), applies
+/// redirection rules via `dup2`, and spawns the process. If the process is
+/// not intended to run in the background, it wires up its output appropriately.
+///
+/// # Arguments
+/// - `name`: The name of the executable.
+/// - `args`: Arguments passed to the executable.
+/// - `redirects`: List of redirection specifications.
+/// - `is_background`: Indicates whether the process should run in the background.
+/// - `state`: Mutable reference to shell state (for managing pipes and handlers).
+/// - `sh_vars`: Mutable reference to shell variables (used for variable lookup).
+/// - `is_last`: Whether this command is the last in a pipeline.
+///
+/// # Returns
+/// - `Ok(())` if the process is successfully spawned.
+/// - `Err(io::Error)` if there is any error during process construction or execution.
 fn execute_process_command(
     name: String,
     args: Vec<String>,
@@ -201,6 +251,21 @@ fn execute_process_command(
     Ok(())
 }
 
+/// Executes a command (built-in or external).
+///
+/// This function resolves the command name and arguments from the `Command` AST node,
+/// handles glob expansion, resolves identifiers using shell variables,
+/// and attempts to execute it as a built-in or external command.
+///
+/// # Arguments
+/// - `command`: The parsed `Command` to execute.
+/// - `state`: Mutable reference to shell state.
+/// - `sh_vars`: Mutable reference to shell variables.
+/// - `is_last`: Whether this is the last command in a pipeline.
+///
+/// # Returns
+/// - `Ok(())` if the command is executed successfully.
+/// - `Err(Error::NOT_IMPLEMENTED)` if resolution or execution fails.
 fn execute_command(
     command: Command,
     state: &mut State,
@@ -267,6 +332,20 @@ fn execute_command(
     })
 }
 
+
+/// Executes a top-level AST statement recursively.
+///
+/// This function dispatches execution based on the type of `Statement`,
+/// handling sequences, assignments, commands, redirections (TODO), and pipelines.
+///
+/// # Arguments
+/// - `ast`: The `Statement` AST node to execute.
+/// - `state`: Mutable reference to shell state.
+/// - `sh_vars`: Mutable reference to shell variables.
+///
+/// # Returns
+/// - `Ok(())` if the statement executes successfully.
+/// - `Err(Error)` if any execution error occurs.
 pub fn execute(ast: Statement, state: &mut State, sh_vars: &mut ShVars) -> Result<()> {
     match ast {
         Statement::Sequence(mut sequence) => {
@@ -286,14 +365,14 @@ pub fn execute(ast: Statement, state: &mut State, sh_vars: &mut ShVars) -> Resul
 
         Statement::Pipe(mut pipe) => {
             *state.pipe_mut() = pipe::Pipe::open();
-            
-            while let Some(command) = pipe.pop_front(){
+
+            while let Some(command) = pipe.pop_front() {
                 execute_command(command, state, sh_vars, pipe.is_empty())?;
             }
 
             state.pipe_mut().close()?;
             state.handler_mut().wait();
-        },
+        }
     }
 
     Ok(())
