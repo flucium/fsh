@@ -2,6 +2,7 @@
 name = "fsh"
 version = "0.0.1"
 edition = "2021"
+authors = ["flucium <flucium@flucium.net>"]
 
 [dependencies]
 serde = {version="1.0.197", features=["derive"]}
