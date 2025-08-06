@@ -1,3 +1,5 @@
 - [ ] Error Kind
 - [ ] Error Message
 - [ ] Clean up document comments
+- [ ] ./src/utils/path.rs (fix: resolve_relative, test_resolve_relative)
+- [ ]
