@@ -1,0 +1,3 @@
+- [ ] Error Kind
+- [ ] Error Message
+- [ ] Clean up document comments
