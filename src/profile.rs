@@ -1,4 +1,5 @@
 use std::{
+    ffi::OsStr,
     fs::File,
     io::{Read, Write},
 };
@@ -25,8 +26,8 @@ pub const DEFAULT_PROFILE_CONTENT: &str = "$FSH_PROMPT = \"# \"";
 /// # Returns
 /// - `Ok(String)` containing the file content if successful.
 /// - `Err(Error::NOT_IMPLEMENTED)` if the file cannot be opened or read.
-pub fn read_profile(path: &str) -> Result<String> {
-    File::open(path)
+pub fn read_profile<P: AsRef<OsStr>>(path: &P) -> Result<String> {
+    File::open(path.as_ref())
         .map_err(|_| Error::NOT_IMPLEMENTED)
         .and_then(|mut file| {
             let mut content = String::new();
@@ -48,11 +49,11 @@ pub fn read_profile(path: &str) -> Result<String> {
 /// # Returns
 /// - `Ok(())` if the write is successful.
 /// - `Err(Error::NOT_IMPLEMENTED)` if the file cannot be created or written.
-pub fn write_profile(path: &str, content: &str) -> Result<()> {
-    File::create(path)
+pub fn write_profile<P: AsRef<OsStr>>(path: &P, content: impl Into<String>) -> Result<()> {
+    File::create(path.as_ref())
         .map_err(|_| Error::NOT_IMPLEMENTED)
         .and_then(|mut file| {
-            file.write_all(content.as_bytes())
+            file.write_all(content.into().as_bytes())
                 .map_err(|_| Error::NOT_IMPLEMENTED)?;
             Ok(())
         })
@@ -69,10 +70,15 @@ pub fn write_profile(path: &str, content: &str) -> Result<()> {
 /// # Returns
 /// - `Ok(())` if the update is successful.
 /// - `Err(Error::NOT_IMPLEMENTED)` if reading or writing the file fails.
-pub fn update_profile(path: &str, content: &str) -> Result<()> {
-    let mut profile = read_profile(path)?;
-    profile.push_str(content);
-    write_profile(path, &profile)
+pub fn update_profile<P: AsRef<OsStr> + ?Sized>(
+    path: &P,
+    content: impl Into<String>,
+) -> Result<()> {
+    let mut profile = read_profile(&path)?;
+
+    profile.push_str(&content.into());
+
+    write_profile(&path, &profile)
 }
 
 /// Returns `true` if a file exists at the given path and can be opened.
@@ -85,6 +91,6 @@ pub fn update_profile(path: &str, content: &str) -> Result<()> {
 /// # Returns
 /// - `true` if the file exists and is readable.
 /// - `false` otherwise.
-pub fn exists(path: &str) -> bool {
-    File::open(path).is_ok()
+pub fn exists<P: AsRef<OsStr> + ?Sized>(path: &P) -> bool {
+    File::open(path.as_ref()).is_ok()
 }
