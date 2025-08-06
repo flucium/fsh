@@ -3,7 +3,7 @@ use crate::{
     token::Token,
 };
 
-use super::lite_parser;
+use super::lite;
 
 pub struct Parser {
     lexer: Lexer,
@@ -52,7 +52,7 @@ impl Parser {
             .map(|tokens| TryInto::<&[Token; 3]>::try_into(tokens).unwrap())
             .ok_or(Error::NOT_IMPLEMENTED)?;
 
-        let assignment = lite_parser::parse_assignment(tokens)?;
+        let assignment = lite::parse_assignment(tokens)?;
 
         self.index += 3;
 
@@ -65,7 +65,7 @@ impl Parser {
             .get(self.index..self.length - self.index)
             .ok_or(Error::NOT_IMPLEMENTED)?;
 
-        let command = lite_parser::parse_command(tokens)?;
+        let command = lite::parse_command(tokens)?;
 
         self.index = self.length;
 
@@ -78,7 +78,7 @@ impl Parser {
             .get(self.index..self.length - self.index)
             .ok_or(Error::NOT_IMPLEMENTED)?;
 
-        let pipe = lite_parser::parse_pipe(tokens)?;
+        let pipe = lite::parse_pipe(tokens)?;
 
         self.index = self.length;
 
