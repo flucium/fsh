@@ -5,6 +5,14 @@ use crate::{
     token::Token,
 };
 
+/// Parses a `null` literal token into an `Expression::Null`.
+///
+/// # Arguments
+/// - `token`: The token to parse.
+///
+/// # Returns
+/// - `Ok(Expression::Null)` if the token is `Token::Null`.
+/// - `Err(Error::NOT_IMPLEMENTED)` otherwise.
 pub fn parse_null(token: &Token) -> Result<Expression> {
     match token {
         Token::Null => Ok(Expression::Null),
@@ -12,6 +20,14 @@ pub fn parse_null(token: &Token) -> Result<Expression> {
     }
 }
 
+/// Parses a string literal token into an `Expression::String`.
+///
+/// # Arguments
+/// - `token`: The token to parse.
+///
+/// # Returns
+/// - `Ok(Expression::String)` with the cloned string if the token is `Token::String`.
+/// - `Err(Error::NOT_IMPLEMENTED)` otherwise.
 pub fn parse_string(token: &Token) -> Result<Expression> {
     match token {
         Token::String(s) => Ok(Expression::String(s.clone())),
@@ -19,6 +35,14 @@ pub fn parse_string(token: &Token) -> Result<Expression> {
     }
 }
 
+/// Parses an identifier token into an `Expression::Identifier`.
+///
+/// # Arguments
+/// - `token`: The token to parse.
+///
+/// # Returns
+/// - `Ok(Expression::Identifier)` if the token is `Token::Identifier`.
+/// - `Err(Error::NOT_IMPLEMENTED)` otherwise.
 pub fn parse_identifier(token: &Token) -> Result<Expression> {
     match token {
         Token::Identifier(s) => Ok(Expression::Identifier(s.clone())),
@@ -26,6 +50,14 @@ pub fn parse_identifier(token: &Token) -> Result<Expression> {
     }
 }
 
+/// Parses a boolean literal token into an `Expression::Boolean`.
+///
+/// # Arguments
+/// - `token`: The token to parse.
+///
+/// # Returns
+/// - `Ok(Expression::Boolean)` if the token is `Token::Boolean`.
+/// - `Err(Error::NOT_IMPLEMENTED)` otherwise.
 pub fn parse_boolean(token: &Token) -> Result<Expression> {
     match token {
         Token::Boolean(b) => Ok(Expression::Boolean(*b)),
@@ -33,6 +65,14 @@ pub fn parse_boolean(token: &Token) -> Result<Expression> {
     }
 }
 
+/// Parses a numeric literal token into an `Expression::Number`.
+///
+/// # Arguments
+/// - `token`: The token to parse.
+///
+/// # Returns
+/// - `Ok(Expression::Number)` if the token is `Token::Number`.
+/// - `Err(Error::NOT_IMPLEMENTED)` otherwise.
 pub fn parse_number(token: &Token) -> Result<Expression> {
     match token {
         Token::Number(n) => Ok(Expression::Number(*n)),
@@ -40,6 +80,14 @@ pub fn parse_number(token: &Token) -> Result<Expression> {
     }
 }
 
+/// Parses a file descriptor token into an `Expression::FileDescriptor`.
+///
+/// # Arguments
+/// - `token`: The token to parse.
+///
+/// # Returns
+/// - `Ok(Expression::FileDescriptor)` if the token is `Token::FileDescriptor`.
+/// - `Err(Error::NOT_IMPLEMENTED)` otherwise.
 pub fn parse_file_descriptor(token: &Token) -> Result<Expression> {
     match token {
         Token::FileDescriptor(n) => Ok(Expression::FileDescriptor(*n)),
@@ -47,6 +95,17 @@ pub fn parse_file_descriptor(token: &Token) -> Result<Expression> {
     }
 }
 
+/// Parses the value part of an assignment expression.
+///
+/// Tries to parse the token as a `null`, string, boolean, number,
+/// or file descriptor in that order.
+///
+/// # Arguments
+/// - `token`: The token to parse.
+///
+/// # Returns
+/// - `Ok(Expression)` if a valid value type is matched.
+/// - `Err(Error::NOT_IMPLEMENTED)` if parsing fails.
 fn parse_assignment_value(token: &Token) -> Result<Expression> {
     parse_null(token)
         .or_else(|_| parse_string(token))
@@ -55,6 +114,14 @@ fn parse_assignment_value(token: &Token) -> Result<Expression> {
         .or_else(|_| parse_file_descriptor(token))
 }
 
+/// Parses an assignment expression from three tokens: `<identifier> = <value>`.
+///
+/// # Arguments
+/// - `tokens`: An array of exactly three tokens.
+///
+/// # Returns
+/// - `Ok(Assignment)` if successfully parsed.
+/// - `Err(Error::NOT_IMPLEMENTED)` if the syntax is invalid.
 pub fn parse_assignment(tokens: &[Token; 3]) -> Result<Assignment> {
     if tokens[1] != Token::Equal {
         Err(Error::NOT_IMPLEMENTED)?;
@@ -64,6 +131,13 @@ pub fn parse_assignment(tokens: &[Token; 3]) -> Result<Assignment> {
     Ok(Assignment::new(identifier, value))
 }
 
+/// Parses the right-hand side of a redirection operator (`>` or `<`).
+///
+/// Accepts strings, identifiers, numbers, or file descriptors.
+///
+/// # Returns
+/// - `Ok(Expression)` if successfully parsed.
+/// - `Err(Error::NOT_IMPLEMENTED)` otherwise.
 fn parse_redirect_right(token: &Token) -> Result<Expression> {
     parse_string(token)
         .or_else(|_| parse_identifier(token))
@@ -71,6 +145,14 @@ fn parse_redirect_right(token: &Token) -> Result<Expression> {
         .or_else(|_| parse_file_descriptor(token))
 }
 
+/// Parses an abbreviated redirect form like `> file` or `< file`.
+///
+/// # Arguments
+/// - `tokens`: An array of exactly two tokens.
+///
+/// # Returns
+/// - `Ok(Redirect)` if successfully parsed.
+/// - `Err(Error::NOT_IMPLEMENTED)` otherwise.
 fn parse_abbreviated_redirect(tokens: &[Token; 2]) -> Result<Redirect> {
     let (left, operator) = match tokens[0] {
         Token::GreaterThan => (Expression::FileDescriptor(1), RedirectOperator::GreaterThan),
@@ -81,6 +163,14 @@ fn parse_abbreviated_redirect(tokens: &[Token; 2]) -> Result<Redirect> {
     Ok(Redirect::new(operator, left, right))
 }
 
+/// Parses a normal redirect form like `@1 > file` or `@0 < file`.
+///
+/// # Arguments
+/// - `tokens`: An array of exactly three tokens.
+///
+/// # Returns
+/// - `Ok(Redirect)` if successfully parsed.
+/// - `Err(Error::NOT_IMPLEMENTED)` otherwise.
 fn parse_normal_redirect(tokens: &[Token; 3]) -> Result<Redirect> {
     let operator = match tokens[1] {
         Token::GreaterThan => RedirectOperator::GreaterThan,
@@ -92,6 +182,13 @@ fn parse_normal_redirect(tokens: &[Token; 3]) -> Result<Redirect> {
     Ok(Redirect::new(operator, left, right))
 }
 
+/// Parses a redirection from a slice of tokens.
+///
+/// Automatically detects whether the redirect is abbreviated or normal based on token count.
+///
+/// # Returns
+/// - `Ok(Redirect)` if successfully parsed.
+/// - `Err(Error::NOT_IMPLEMENTED)` otherwise.
 pub fn parse_redirect(tokens: &[Token]) -> Result<Redirect> {
     match tokens.len() {
         2 => {
@@ -106,12 +203,25 @@ pub fn parse_redirect(tokens: &[Token]) -> Result<Redirect> {
     }
 }
 
+/// Parses the command name token into an expression.
+///
+/// Accepts strings, identifiers, or numbers.
 fn parse_command_name(token: &Token) -> Result<Expression> {
     parse_string(token)
         .or(parse_identifier(token).or(parse_number(token)))
         .or_else(|_| Err(Error::NOT_IMPLEMENTED))
 }
 
+/// Parses the arguments, redirects, and background flag of a command.
+///
+/// Redirect syntax is detected and parsed into `Redirect` structures.
+/// The last token may be an ampersand (`&`) to indicate background execution.
+///
+/// # Returns
+/// - `(Vec<Expression>, Vec<Redirect>, Expression)` tuple containing:
+///   - arguments
+///   - redirects
+///   - background flag (`Expression::Boolean`)
 fn parse_command_arguments(
     tokens: &[Token],
 ) -> Result<(Vec<Expression>, Vec<Redirect>, Expression)> {
@@ -163,6 +273,10 @@ fn parse_command_arguments(
     Ok((arguments, redirects, is_background))
 }
 
+/// Parses a full command from a sequence of tokens.
+///
+/// The first token is treated as the command name, and the remainder
+/// is parsed into arguments, redirects, and background execution flag.
 pub fn parse_command(tokens: &[Token]) -> Result<Command> {
     let name = parse_command_name(&tokens[0])?;
 
@@ -171,6 +285,14 @@ pub fn parse_command(tokens: &[Token]) -> Result<Command> {
     Ok(Command::new(name, arguments, redirects, is_background))
 }
 
+/// Parses a pipeline (`|`-separated commands) from tokens.
+///
+/// Each segment between pipes is parsed as a `Command`
+/// and pushed into a `Pipe` structure.
+///
+/// # Returns
+/// - `Ok(Pipe)` if successfully parsed.
+/// - `Err(Error::NOT_IMPLEMENTED)` if token count is insufficient or parsing fails.
 pub fn parse_pipe(tokens: &[Token]) -> Result<Pipe> {
     if tokens.len() < 3 {
         Err(Error::NOT_IMPLEMENTED)?
