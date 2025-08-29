@@ -65,7 +65,10 @@ pub mod path {
         current: &A,
         target: &B,
     ) -> Result<PathBuf> {
+        //
         // current
+        //
+
         let current = Path::new(current).canonicalize().map_err(|_| {
             Error::new(
                 ErrorKind::InvalidPath,
@@ -87,7 +90,10 @@ pub mod path {
             ))?;
         }
 
+        //
         // target
+        //
+
         let target = Path::new(target);
 
         if !target.is_dir() {
@@ -113,5 +119,70 @@ pub mod path {
             })?;
 
         Ok(path)
+    }
+
+    #[cfg(test)]
+    mod tests {
+        //
+        // e.g. cargo test --package fsh --lib -- utils::path::tests --exact --show-output
+        //      cargo test --package fsh --lib -- utils::path::tests::test_resolve_relative --show-output
+
+        use super::*;
+
+        #[test]
+        fn test_expand_tilde_to_home_dir() {
+            assert_eq!(expand_tilde_to_home_dir("~"), "root");
+            assert_eq!(expand_tilde_to_home_dir("~/"), "root/");
+            assert_eq!(expand_tilde_to_home_dir("~/repos"), "root/repos");
+        }
+
+        #[test]
+        fn test_resolve_relative() {
+            assert!(resolve_relative("./", "./src").is_ok());
+
+            assert!(resolve_relative("./", "./aaa").is_err());
+
+            assert_eq!(resolve_relative("./", "./src"), Ok("./src".into()));
+
+            assert_ne!(resolve_relative("./", "./aaa"), Ok("./aaa".into()));
+        }
+
+        #[test]
+        fn test_pathbuf_ext_expand_tilde() {
+            let mut pathbuf = std::path::PathBuf::from("~/repos");
+
+            pathbuf.expand_tilde();
+
+            assert_eq!(pathbuf.to_str(), Some("/root/repos"));
+
+            assert_ne!(pathbuf.to_str(), Some("/root/repos/"));
+        }
+
+        #[test]
+        fn test_pathbuf_ext_glob() {
+            assert!(std::path::PathBuf::from("./src/*.rs").glob().is_ok());
+
+            assert!(std::path::PathBuf::from("./src/l*b.*s").glob().is_ok());
+
+            assert!(
+                std::path::PathBuf::from("./src/a*t/expression.rs")
+                    .glob()
+                    .unwrap()
+                    .count()
+                    == 1
+            );
+
+            assert!(std::path::PathBuf::from("./src/*.jpg").glob().is_ok());
+
+            assert!(
+                std::path::PathBuf::from("./src/*.jpg")
+                    .glob()
+                    .unwrap()
+                    .count()
+                    == 0
+            );
+
+            assert!(std::path::PathBuf::from("./src/***").glob().is_err());
+        }
     }
 }
