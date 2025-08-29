@@ -41,7 +41,7 @@ pub fn exit(code: i32) {
 pub fn cd<S: AsRef<OsStr> + ?Sized>(p: &S, current_path: &Path) -> Result<PathBuf> {
     let path = utils::path::resolve_relative(&current_path, p)?;
 
-    env::set_current_dir(&path).map_err(|_| Error::NOT_IMPLEMENTED)?;
+    env::set_current_dir(&path).map_err(|_| Error::new(ErrorKind::NotFound,"failed to change current directory"))?;
 
     Ok(path)
 }
