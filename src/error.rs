@@ -1,3 +1,7 @@
+const FSH_ERROR_LABEL: &str = "fsh";
+const FSH_ERROR_LABEL_COLON: char = ':';
+const FSH_ERROR_LABEL_WHITESPACE: char = ' ';
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum ErrorKind {
     NotImplemented,
@@ -31,26 +35,6 @@ impl ErrorKind {
             Self::NotFound => "not found",
             Self::NotAFile => "not a file",
             Self::NotADirectory => "not a directory",
-        }
-    }
-}
-
-impl ToString for ErrorKind {
-    fn to_string(&self) -> String {
-        match self {
-            Self::NotImplemented => String::from("not implemented"),
-            Self::Internal => String::from("internal"),
-            Self::Other => String::from("other"),
-            Self::Interrupted => String::from("interrupted"),
-            Self::PermissionDenied => String::from("permission denied"),
-            Self::InvalidInput => String::from("invalid input"),
-            Self::InvalidSyntax => String::from("invalid syntax"),
-            Self::InvalidPath => String::from("invalid path"),
-            Self::InvalidFileDescriptor => String::from("invalid file descriptor"),
-            Self::ExecutionFailed => String::from("execution failed"),
-            Self::NotFound => String::from("not found"),
-            Self::NotAFile => String::from("not a file"),
-            Self::NotADirectory => String::from("not a directory"),
         }
     }
 }
@@ -98,14 +82,22 @@ impl Error {
     }
 }
 
-impl ToString for Error {
-    fn to_string(&self) -> String {
-        format!("fsh: {}: {}", self.kind.as_str(), self.message)
-    }
-}
-
 impl From<Error> for std::io::Error {
     fn from(err: Error) -> Self {
         err.into()
+    }
+}
+
+pub fn errformat(err: &Error, arg: Option<&str>) -> String {
+    if let Some(arg) = arg {
+        format!(
+            "{FSH_ERROR_LABEL}{FSH_ERROR_LABEL_COLON}{FSH_ERROR_LABEL_WHITESPACE}{arg}{FSH_ERROR_LABEL_COLON}{FSH_ERROR_LABEL_WHITESPACE}{}",
+            err.message()
+        )
+    } else {
+        format!(
+            "{FSH_ERROR_LABEL}{FSH_ERROR_LABEL_COLON}{FSH_ERROR_LABEL_WHITESPACE}{}",
+            err.message()
+        )
     }
 }
