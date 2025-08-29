@@ -106,3 +106,69 @@ fn remove_empty_line(source: &str) -> Cow<'_, str> {
         Cow::Owned(result)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    //
+    // e.g. cargo test --package fsh --lib -- preprocessor::tests --show-output
+    //      cargo test --package fsh --lib -- preprocessor:tests::test_remove_comment --exact --show-output
+    //      
+
+    use super::*;
+
+    #[test]
+    fn test_remove_comment() {
+        assert!(remove_comments("").is_empty());
+
+        assert!(remove_comments("#").is_empty());
+
+        assert!(remove_comments("#ls -a").is_empty());
+
+        assert_eq!(remove_comments("\"#ls -a\""), "\"#ls -a\"");
+
+        assert_eq!(remove_comments("ls #-a"), "ls ");
+
+        assert_eq!(remove_comments("#ls;echo Hello"), "echo Hello");
+
+        assert_eq!(remove_comments("#ls\necho Hello"), "echo Hello");
+    }
+
+    #[test]
+    fn test_replace_line_with_semicolon() {
+        assert_eq!(replace_line_with_semicolon("\n"), ";");
+        assert_eq!(replace_line_with_semicolon("\n\n\n"), ";;;");
+
+        assert_eq!(replace_line_with_semicolon("\r\n"), ";");
+        assert_eq!(replace_line_with_semicolon("\r\n\r\n\r\n"), ";;;");
+
+        assert_ne!(replace_line_with_semicolon("\r"), ";");
+        assert_ne!(replace_line_with_semicolon("\n\r"), ";");
+    }
+
+    #[test]
+    fn test_remove_empty_line() {
+        assert!(remove_empty_line("").is_empty());
+
+        assert!(remove_empty_line("  ").is_empty());
+
+        assert_eq!(remove_empty_line("\nHello"), "Hello");
+
+        assert_eq!(remove_empty_line("  \nHello"), "Hello");
+    }
+
+    #[test]
+    fn test_preprocess() {
+        assert_eq!(preprocess(""), "");
+
+        assert_eq!(preprocess(" "), "");
+
+        assert_eq!(preprocess("#hello\nls -a"), "ls -a");
+
+        assert_eq!(preprocess("#hello\n ls -a"), " ls -a");
+
+        assert_eq!(
+            preprocess("#hello\nls -a ~; echo '#Hello FSH!' | cat -b;\n\necho Hello."),
+            "ls -a ~; echo '#Hello FSH!' | cat -b;echo Hello."
+        );
+    }
+}
