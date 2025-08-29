@@ -293,19 +293,177 @@ impl Lexer {
         Ok(Token::EOF)
     }
 
-    // pub fn tokenize(&mut self) -> Result<Vec<Token>> {
-    //     let mut tokens = Vec::new();
+    pub fn tokenize(&mut self) -> Result<Vec<Token>> {
+        let mut tokens = Vec::new();
 
-    //     loop {
-    //         let token = self.next()?;
+        loop {
+            let token = self.next()?;
 
-    //         if token == Token::EOF {
-    //             break;
-    //         }
+            tokens.push(token);
 
-    //         tokens.push(token);
-    //     }
+            if tokens.last() == Some(&Token::EOF) {
+                break;
+            }
+        }
 
-    //     Ok(tokens)
-    // }
+        Ok(tokens)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    //
+    // e.g. cargo test --package fsh --lib -- lexer::tests --show-output
+    //      cargo test --package fsh --lib -- lexer:tests::read_while --exact --show-output
+    //
+
+    use super::*;
+
+    #[test]
+    fn test_read_while() {
+        assert_eq!(Lexer::new("").read_while(|_| false), "");
+
+        assert_eq!(
+            Lexer::new("ls -a ./ | cat -b").read_while(|_| true),
+            "ls -a ./ | cat -b"
+        );
+
+        assert_eq!(
+            Lexer::new("ls -a ./ > test.txt; cat < test.txt").read_while(|c| c != ';'),
+            "ls -a ./ > test.txt"
+        );
+
+        assert_eq!(
+            Lexer::new("ls -a | cat -b").read_while(|c| c != ';' && c != '|'),
+            "ls -a "
+        );
+
+        assert_ne!(
+            Lexer::new("ls -a ./ > test.txt; cat < test.txt").read_while(|c| c == ';'),
+            "ls -a ./ > test.txt"
+        );
+
+        assert_ne!(
+            Lexer::new("ls -a | cat -b").read_while(|c| c != ';' || c != '|'),
+            "ls -a "
+        );
+    }
+
+    #[test]
+    fn test_read_keyword_token() {
+        assert!(Lexer::new("null").read_keyword_token().is_ok());
+        assert!(Lexer::new("true").read_keyword_token().is_ok());
+        assert!(Lexer::new("false").read_keyword_token().is_ok());
+
+        assert!(Lexer::new("").read_keyword_token().is_err());
+        assert!(Lexer::new("abcd").read_keyword_token().is_err());
+        assert!(Lexer::new("Null").read_keyword_token().is_err());
+        assert!(Lexer::new("True").read_keyword_token().is_err());
+        assert!(Lexer::new("False").read_keyword_token().is_err());
+    }
+
+    #[test]
+    fn test_read_string_token() {
+        assert!(Lexer::new("ls -a").read_string_token().is_ok());
+
+        assert_eq!(
+            Lexer::new("ls -a").read_string_token(),
+            Ok(Token::String("ls".to_string()))
+        );
+
+        assert!(Lexer::new("\"ls -a\"").read_string_token().is_err());
+        assert!(Lexer::new("0123").read_string_token().is_err());
+    }
+
+    #[test]
+    fn test_read_quoted_string_token() {
+        assert!(Lexer::new("\"echo Hello\"")
+            .read_quoted_string_token()
+            .is_ok());
+        assert!(Lexer::new("'echo Hello'")
+            .read_quoted_string_token()
+            .is_ok());
+        assert!(Lexer::new("\"0123\"").read_quoted_string_token().is_ok());
+        assert!(Lexer::new("'0123'").read_quoted_string_token().is_ok());
+        assert_eq!(
+            Lexer::new("\"#ls -a\"#echo Hello").read_quoted_string_token(),
+            Ok(Token::String("#ls -a".to_string()))
+        );
+        assert_eq!(
+            Lexer::new("'#ls -a'#echo Hello").read_quoted_string_token(),
+            Ok(Token::String("#ls -a".to_string()))
+        );
+
+        assert!(Lexer::new("echo Hello").read_quoted_string_token().is_err());
+        assert!(Lexer::new("0123").read_quoted_string_token().is_err());
+    }
+
+    #[test]
+    fn test_read_identifier_token() {
+        assert!(Lexer::new("$A").read_identifier_token().is_ok());
+        assert!(Lexer::new("$0123").read_identifier_token().is_ok());
+        assert!(Lexer::new("$_").read_identifier_token().is_ok());
+        assert!(Lexer::new("$-").read_identifier_token().is_ok());
+
+        assert!(Lexer::new("$\"A\"").read_identifier_token().is_err());
+        assert!(Lexer::new("$'A'").read_identifier_token().is_err());
+        assert!(Lexer::new("$").read_identifier_token().is_err());
+    }
+
+    #[test]
+    fn test_read_number_token() {
+        assert!(Lexer::new("0123").read_number_token().is_ok());
+
+        assert!(Lexer::new("Hello").read_number_token().is_err());
+    }
+
+    #[test]
+    fn test_read_filedescriptor_token() {
+        assert!(Lexer::new("@0").read_filedescriptor_token().is_ok());
+        assert!(Lexer::new("@100").read_filedescriptor_token().is_ok());
+        assert_eq!(
+            Lexer::new("@0Hello").read_filedescriptor_token(),
+            Ok(Token::FileDescriptor(0))
+        );
+
+        assert!(Lexer::new("@").read_filedescriptor_token().is_err());
+        assert!(Lexer::new("@Hello").read_filedescriptor_token().is_err());
+    }
+
+    #[test]
+    fn test_tokenize() {
+        assert_eq!(
+            Lexer::new("ls -a; echo Hello | rev;echo Hello > test.txt;cat < test.txt;echo \"Hello FSH!\"@1>test.txt;cat @0<test.txt").tokenize(),
+            Ok(Vec::from([
+                Token::String("ls".to_string()),
+                Token::String("-a".to_string()),
+                Token::Semicolon,
+                Token::String("echo".to_string()),
+                Token::String("Hello".to_string()),
+                Token::Pipe,
+                Token::String("rev".to_string()),
+                Token::Semicolon,
+                Token::String("echo".to_string()),
+                Token::String("Hello".to_string()),
+                Token::GreaterThan,
+                Token::String("test.txt".to_string()),
+                Token::Semicolon,
+                Token::String("cat".to_string()),
+                Token::LessThan,
+                Token::String("test.txt".to_string()),
+                Token::Semicolon,
+                Token::String("echo".to_string()),
+                Token::String("Hello FSH!".to_string()),
+                Token::FileDescriptor(1),
+                Token::GreaterThan,
+                Token::String("test.txt".to_string()),
+                Token::Semicolon,
+                Token::String("cat".to_string()),
+                Token::FileDescriptor(0),
+                Token::LessThan,
+                Token::String("test.txt".to_string()),
+                Token::EOF,
+            ]))
+        )
+    }
 }
