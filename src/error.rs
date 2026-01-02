@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ErrorKind {
     NotImplemented,
     Internal,
@@ -25,7 +25,7 @@ impl ToString for ErrorKind {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Error {
     kind: ErrorKind,
     message: String,
