@@ -104,24 +104,6 @@ impl Lexer {
         }
     }
 
-    fn read_equal_token(&mut self) -> Result<Token>{
-        if self.current().is_none_or(|c|c != RESERVED_CHARS[4]){
-            Err(Error::NOT_IMPLEMENTED)?
-        }
-
-        let start_index = self.index;
-
-        self.advance();
-
-        if self.current().is_none_or(|c|c != RESERVED_CHARS[4]){
-            self.index = start_index;
-            Err(Error::NOT_IMPLEMENTED)?
-        }
-        
-
-        Ok(Token::Equal)
-    }
-
     /// Reads a non-quoted string token until whitespace or reserved character.
     ///
     /// Fails if the token is empty, numeric, or a reserved keyword.
@@ -271,10 +253,16 @@ impl Lexer {
                     
                     
                     self.advance();
-                    Ok(Token::Assign)
-                    
-                    
 
+                    if self.current().is_some_and(|c|c == RESERVED_CHARS[4]){
+                        self.advance();
+                        Ok(Token::Equal)
+                    }else{
+                        Ok(Token::Assign)
+                    }
+                    
+                    
+                    
                 }
 
                 '<' => {
@@ -324,13 +312,15 @@ mod tests {
 
     #[test]
     fn test_reserved_characters() {
-        let mut lexer = Lexer::new("; & | = < >");
+        let mut lexer = Lexer::new("; & | = == < >");
 
         assert_eq!(lexer.next().unwrap(), Token::Semicolon);
 
         assert_eq!(lexer.next().unwrap(), Token::Ampersand);
 
         assert_eq!(lexer.next().unwrap(), Token::Pipe);
+
+        assert_eq!(lexer.next().unwrap(), Token::Assign);
 
         assert_eq!(lexer.next().unwrap(), Token::Equal);
 
@@ -339,6 +329,28 @@ mod tests {
         assert_eq!(lexer.next().unwrap(), Token::GreaterThan);
 
         assert_eq!(lexer.next().unwrap(), Token::EOF);
+    }
+
+    #[test]
+    fn test_read_equal_token(){
+        let mut lexer = Lexer::new("== ==");
+        
+        assert_eq!(lexer.next().unwrap(),Token::Equal);
+        assert_eq!(lexer.next().unwrap(),Token::Equal);
+
+        let mut lexer = Lexer::new("A==A 100==100 = == =");
+
+        assert_eq!(lexer.next().unwrap(),Token::String("A".to_string()));
+        assert_eq!(lexer.next().unwrap(),Token::Equal);
+        assert_eq!(lexer.next().unwrap(),Token::String("A".to_string()));
+        
+        assert_eq!(lexer.next().unwrap(),Token::Number(100));
+        assert_eq!(lexer.next().unwrap(),Token::Equal);
+        assert_eq!(lexer.next().unwrap(),Token::Number(100));
+
+        assert_eq!(lexer.next().unwrap(),Token::Assign);
+        assert_eq!(lexer.next().unwrap(),Token::Equal);
+        assert_eq!(lexer.next().unwrap(),Token::Assign);
     }
 
     #[test]
